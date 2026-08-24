@@ -1,0 +1,20 @@
+# SceneGraphs with LLM-EMBEDDING node features + numeric box coordinates.
+#
+# Two changes, both aimed at measured failures (README "Why the results split the way they do"):
+#  1. c_v = mean of the frozen Llama input embeddings over the node's text tokens (GRAFF Eq. 4)
+#     instead of all-roberta-large-v1. Removes the sbert->Llama misalignment that W_O never
+#     learned to bridge (OPEN-QUESTIONS Q17/Q21).
+#  2. + 7 normalized box features (x, y, w, h, area, cx, cy) parsed from the node text. sbert
+#     mean-pooling destroys numeric magnitude, and spatial questions are the largest SceneGraphs
+#     category (6,916/20,025) at 50.4%. ReGraph.md §2.1 explicitly permits numerical attributes.
+#
+# DEVIATION from ReGraph.md §3.2's choice of attribute encoder — §2.1 makes the encoder
+# swappable ("the graph->LLM interface does not change when the attribute encoder changes").
+defaults: scene_graphs.yaml
+dataset:
+  name: scene_graphs_llmemb_coords
+  eval_as: scene_graphs          # reuse the SceneGraphs metric
+graph_encoder:
+  edge_dim: 4103                 # edge attributes are re-featurized too
+data:
+  d_attr: 4103                   # 4096 Llama embedding + 7 coordinate features

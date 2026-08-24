@@ -1,0 +1,19 @@
+# WebQSP: RoG partition, empty validation graph excluded -- Hit@1
+#
+# Expected numbers below are what G-Retriever's *released split files* actually
+# contain: 2,826 / 245 / 1,628 usable examples (4,699). The protocol table's
+# "4,737 examples" is the original WebQSP question count; its per-graph averages
+# (1370.89 / 4252.37) equal ours exactly when the one dropped empty-validation
+# graph is included in the denominator (4,700). See docs/OPEN-QUESTIONS.md Q16.
+defaults: default.yaml
+dataset:
+  name: webqsp
+  metric: hit@1
+  multi_answer_sep: "|"
+  drop_empty_val_graph: true
+  expected_splits: {train: 2826, val: 245, test: 1628}
+  expected_total: 4699
+  expected_avg_nodes: 1371.18
+  expected_avg_edges: 4253.27
+eval:
+  batch_size: 4          # large graphs

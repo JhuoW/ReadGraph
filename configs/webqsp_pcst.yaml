@@ -1,0 +1,16 @@
+# WebQSP on G-Retriever's PCST-RETRIEVED subgraphs (~8 nodes), matching the setup GRAFF and
+# G-Retriever actually evaluate on (GRAFF Table 2: WebQSP avg 8.39 nodes).
+#
+# DEVIATION from ReGraph.md §3.2, which specifies no retrieval step. Reported as its own row.
+# It is also a direct test of a measured failure: on the full 1,371-node graph ReGraph's reader
+# puts the gold answer node at median rank 301; retrieval removes that problem by construction.
+defaults: webqsp.yaml
+dataset:
+  name: webqsp_pcst
+  metric: hit@1
+  expected_splits: {train: 2826, val: 245, test: 1628}
+  expected_total: 4699
+  expected_avg_nodes: null
+  expected_avg_edges: null
+eval:
+  batch_size: 16          # subgraphs are tiny now

@@ -1,0 +1,45 @@
+# Stage 1: graph->LLM ALIGNMENT pretraining on ogbn-arxiv.
+#
+# Motivation (docs/OPEN-QUESTIONS.md Q21). Two independent lines of evidence say ReGraph's
+# output projection W_O never learns a decodable map when trained from answer likelihood
+# alone: (a) measured on all three GraphQA checkpoints, W_O's std stays at 5e-4..2e-3 and the
+# reading distribution *degrades* during training (WebQSP gold-node median rank 37 at init ->
+# 301 trained), with every hyperparameter a measured null; (b) GraphTranslator, BLIP-2 and
+# LLaVA all solve exactly this with a projector-alignment stage before task training.
+#
+# This stage keeps the LLM frozen and trains the same graph-side modules, but asks the
+# evidence tokens to make the LLM reproduce the centre paper's TITLE. That is a dense,
+# per-example, surface-form target — precisely what the answer-only objective never provides.
+# Stage 2 (configs/arxiv.yaml --init-from) then fine-tunes on the classification task.
+#
+# DEVIATION from ReGraph.md 3.2 ("no intermediate supervision"). Report as its own row, with
+# the no-alignment run as the control.
+defaults: arxiv.yaml
+run_name: align
+data:
+  target_field: align_target          # centre node's title, added by add_align_targets.py
+  prompt_template: "Summarize the paper at the centre of this citation neighbourhood.\n"
+  answer_boundary: "\nTitle:"
+  max_answer_tokens: 32
+reader:
+  # Stage 1 exists to FIT the projector, so it must not inherit the settings that were
+  # measured unable to train it. Zero-init W_O makes dL/dS~ proportional to ||W_O||, and at
+  # lr 1e-5 the first attempt moved W_O only 0.00063 -> 0.00075 across two epochs (kept as
+  # evidence in runs/arxiv/align-protocol-lr). LLaVA/BLIP-2 pretrain their projector at ~1e-3.
+  # Raising the lr is safe *here*, unlike the SceneGraphs sweep where it killed the fusion
+  # gate: the alignment prompt is identical for every example, so the graph is the only way
+  # to reduce loss and the gate has no incentive to close (observed: gates rose to 0.94).
+  w_o_init: normal
+  w_o_init_std: 1.0e-3
+train:
+  lr: 2.0e-4
+  # Pin the fusion gate open during Stage 1. Measured twice (SceneGraphs sweep, and this
+  # stage's v2 run): the gate is a single scalar head with a strong direct gradient, so it
+  # learns "this evidence is noise" and shuts the channel long before the 17M-parameter
+  # encoder and W_O can make the evidence useful — and because the gradient reaching W_O is
+  # scaled by the gate, shutting it re-severs the path. lr_mult 0 freezes w_g at its zero
+  # init, so g == 0.5 throughout and the model *cannot* suppress the evidence; its only way
+  # to reduce loss is to make R decodable. Stage 2 trains the gate normally again.
+  lr_mult: {fuse: 0.0}
+  max_epochs: 3                       # alignment converges fast; this is a warm start
+  early_stopping_patience: 2

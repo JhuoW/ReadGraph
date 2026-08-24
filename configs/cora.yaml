@@ -1,0 +1,19 @@
+# Cora — text-attributed, as used by LLaGA (ICML'24) and GraphGPT (SIGIR'24).
+# Node text/labels/splits from TAPE (xxhe/tape-cora); graph from the original LINQS
+# cora.content / cora.cites. The join is on cora.content row order — verified at build time
+# (100% label agreement; Planetoid's ordering gives 14.29% = chance and is rejected).
+# 2-hop ego-subgraphs (mean 17 nodes), open-ended generation of the topic name, no task head.
+defaults: default.yaml
+dataset:
+  name: cora
+  metric: accuracy
+  num_hops: 2
+  fanout: 10
+data:
+  tag_raw_dir: /mnt/ssd1/zhuowei/regraph-cache/tape_raw
+  prompt_template: "{question}\n"
+  max_question_tokens: 64
+  max_answer_tokens: 16
+eval:
+  batch_size: 8
+  max_new_tokens: 16

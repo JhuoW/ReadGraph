@@ -1,0 +1,23 @@
+# SceneGraphs: ReGraph's iterative reading PLUS a serialized-text token channel.
+#
+# AUGMENTATION, not replacement — the Read-Fuse-Replace rounds stay on and the graph is *also*
+# rendered into the prompt the way G-Retriever and GRAFF do. Purpose: measure whether iterative
+# graph reading contributes anything once the LLM can read node attributes as tokens.
+#
+# DEVIATION from ReGraph.md §3.2 ("the graph is not serialized into the LLM context") —
+# docs/OPEN-QUESTIONS.md Q23. Report on its own row.
+#
+# The full graph is serialized rather than a PCST-retrieved subgraph: measured on SceneGraphs,
+# PCST (topk=3, topk_e=3) keeps the gold answer string in only 37.3% of examples versus 81.7%
+# for the full graph, so retrieval would cap the ceiling below the current 51.83 baseline.
+defaults: scene_graphs.yaml
+dataset:
+  name: scene_graphs
+  eval_as: scene_graphs
+data:
+  serialize_graph: true
+  max_question_tokens: 1536      # serialized graph is ~934 tokens mean, p90 ~1700
+train:
+  num_workers: 2
+eval:
+  batch_size: 4                  # sequences are ~20x longer now

@@ -1,0 +1,9 @@
+# SceneGraphs (GQA): official 60/20/20 split over IMAGE IDS -- accuracy
+defaults: default.yaml
+dataset:
+  name: scene_graphs
+  metric: accuracy
+  split_on: image_id
+  expected_total: 100000
+  expected_avg_nodes: 19.13
+  expected_avg_edges: 68.44

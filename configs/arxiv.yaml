@@ -1,0 +1,28 @@
+# ogbn-arxiv = the objective half of the GraphTranslator benchmark (Zhang et al., WWW 2024).
+# 169,343 nodes / 1,166,243 edges / 40 CS categories; frozen LLM, graph never serialized.
+#
+# Protocol notes (report these with any number):
+#  - Each example is a sampled 2-hop ego-subgraph (<=111 nodes), not the full graph.
+#    ReGraph's reader softmaxes over all nodes and its localization collapses past n~1371.
+#    GraphTranslator and LLaGA sample the same way.
+#  - GraphTranslator's ArXiv result is ZERO-SHOT (Top-1 28.48 / Top-3 37.62 / Top-5 39.87).
+#    Ours is supervised on ogbn-arxiv's train split, so the two are not directly comparable.
+#  - Training set is subsampled for tractable iteration (see max_train).
+defaults: default.yaml
+dataset:
+  name: arxiv
+  metric: accuracy
+  num_hops: 2
+  fanout: 10
+  max_train: 20000            # of 90,941; subsampled for runtime
+  max_val: 2000               # of 29,799
+  # GraphTranslator's exact 4,000-node evaluation subset
+  graphtranslator_test_subset: /tmp/claude-1003/-home-zhuowei-My-Proj-ReadGraph/df8e5c9e-f370-4a76-92f8-b8b522db3e73/scratchpad/GraphTranslator/data/arxiv/arxiv_test_idx_random_4000.csv
+data:
+  arxiv_raw_dir: /mnt/ssd1/zhuowei/regraph-cache/arxiv_raw
+  prompt_template: "{question}\n"
+  max_question_tokens: 64     # the question is fixed and short; the graph carries the content
+  max_answer_tokens: 16
+eval:
+  batch_size: 8
+  max_new_tokens: 16

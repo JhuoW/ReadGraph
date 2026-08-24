@@ -1,0 +1,20 @@
+# ogbn-products SUBSET (54,025 nodes) as released by TAPE, text-attributed.
+#
+# NOT directly comparable to LLaGA: they evaluate on the FULL 2.4M-node ogbn-products.
+# Node text = "Product: <title>. Description: <content>"; 47 human-readable Amazon categories
+# from OGB's labelidx2productcategory mapping. Split from TAPE's train/val/test masks
+# (14,708 / 1,572 / 37,745). 2-hop ego-subgraphs, mean 13.8 nodes.
+defaults: default.yaml
+dataset:
+  name: products
+  metric: accuracy
+  num_hops: 2
+  fanout: 10
+data:
+  tag_raw_dir: /mnt/ssd1/zhuowei/regraph-cache/tape_raw
+  prompt_template: "{question}\n"
+  max_question_tokens: 64
+  max_answer_tokens: 16
+eval:
+  batch_size: 8
+  max_new_tokens: 16

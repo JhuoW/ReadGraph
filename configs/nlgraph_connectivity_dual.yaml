@@ -1,0 +1,13 @@
+# NLGraph connectivity with a token channel (edge list in the prompt) PLUS ReGraph's reading rounds.
+# Tests whether the reader adds anything on a task where it is at chance on its own
+# (protocol: connectivity 49.33, cycle 52.88 vs random 50).
+# NLGraph's own baselines are exactly this token setting, via prompting.
+defaults: nlgraph_connectivity.yaml
+dataset:
+  name: nlgraph_connectivity_dual
+  task: connectivity
+  eval_as: nlgraph_connectivity
+  name_anchors: true          # anchors must be in the TEXT too, not only in role markers
+data:
+  serialize_graph: true
+  max_question_tokens: 1024

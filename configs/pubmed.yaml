@@ -1,0 +1,19 @@
+# PubMed — text-attributed, as used by LLaGA (ICML'24) and GraphGPT (SIGIR'24).
+# Node order from TAPE's PubMed_orig (Pubmed-Diabetes.NODE.paper.tab row order); titles and
+# abstracts joined from pubmed.json on PMID (verified: 19716/19717 covered, 1 malformed record
+# gets a placeholder). TAPE's 60/20/20 split. 2-hop ego-subgraphs (mean 24.3 nodes),
+# open-ended generation of the diabetes type, no task head.
+defaults: default.yaml
+dataset:
+  name: pubmed
+  metric: accuracy
+  num_hops: 2
+  fanout: 10
+data:
+  tag_raw_dir: /mnt/ssd1/zhuowei/regraph-cache/tape_raw
+  prompt_template: "{question}\n"
+  max_question_tokens: 64
+  max_answer_tokens: 16
+eval:
+  batch_size: 8
+  max_new_tokens: 16

@@ -1,0 +1,21 @@
+# NeighborhoodQA-2hop — the first task here that REQUIRES separating one hop from another.
+#
+# "Which areas appear among the papers cited by the papers this one cites, excluding the ones
+# already cited directly?" Answer = a set of area names, scored by set-F1.
+#
+# Why it matters: ReGraph.md §2.3 predicts a per-token hop distribution alpha over k = 0..K.
+# On all ten datasets evaluated so far alpha collapsed onto hop-0 (0.9995 on SceneGraphs), so
+# the topology-diffusion mechanism has never actually been exercised. This task cannot be
+# answered from hop-0 or hop-1 alone.
+#
+# Measured shortcut floors: "answer the hop-1 set" = 54.9 set-F1; "answer the centre's own
+# area" = 34.2. Gold sets average 6.07 areas.
+defaults: arxiv_nbrqa.yaml
+dataset:
+  name: arxiv_nbrqa_hop2
+  eval_as: arxiv_nbrqa
+  target_hop: 2
+data:
+  max_answer_tokens: 96      # answers are larger here (mean 6.07 areas)
+eval:
+  max_new_tokens: 96

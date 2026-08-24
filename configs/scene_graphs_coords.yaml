@@ -1,0 +1,15 @@
+# SceneGraphs = sbert node features + 7 normalized box coordinates (x,y,w,h,area,cx,cy).
+#
+# Isolates the coordinate half of configs/scene_graphs_llmfeat.yaml, which bundled coordinates
+# with LLM-embedding features and lost 6.9 pp. sbert mean-pooling does not preserve numeric
+# magnitude, so left/right comparisons are unrecoverable from text alone — and spatial questions
+# are the largest SceneGraphs category (6,916/20,025) at 50.4% accuracy.
+# ReGraph.md §2.1 explicitly allows numerical attributes.
+defaults: scene_graphs.yaml
+dataset:
+  name: scene_graphs_sbert_coords
+  eval_as: scene_graphs
+graph_encoder:
+  edge_dim: 1031
+data:
+  d_attr: 1031

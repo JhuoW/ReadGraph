@@ -1,0 +1,12 @@
+# ExplaGraphs: 1,659 / 553 / 554 -- accuracy
+defaults: default.yaml
+data:
+  # the ExplaGraphs question already contains its own "Question: ..." line
+  # (G-Retriever's prompt); see docs/OPEN-QUESTIONS.md Q11
+  prompt_template: "{question}\n"
+dataset:
+  name: expla_graphs
+  metric: accuracy
+  expected_splits: {train: 1659, val: 553, test: 554}
+  expected_avg_nodes: 5.17
+  expected_avg_edges: 4.25

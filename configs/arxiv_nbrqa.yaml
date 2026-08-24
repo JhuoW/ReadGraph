@@ -1,0 +1,27 @@
+# NeighborhoodQA — open-ended graph reasoning with exact ground truth (built by this repo).
+#
+# "Which arXiv CS subject areas appear among the papers this one cites? List every area."
+# The answer is a variable-length SET of area names generated as free text, scored by set-F1.
+# Constructed because no benchmark tested here evaluates ReGraph.md's motivating claim of
+# non-retrieval, open-ended graph queries.
+#
+# Anti-shortcut property (measured, not assumed): answering with the centre paper's OWN area
+# scores only 63.81 set-F1, so the model must aggregate over neighbours to beat it.
+# Ground truth is computed on the SAMPLED ego-subgraph the model actually sees.
+defaults: default.yaml
+dataset:
+  name: arxiv_nbrqa
+  metric: set_f1
+  num_hops: 2
+  fanout: 10
+  max_train: 20000
+  max_val: 2000
+  max_test: 4000
+data:
+  arxiv_raw_dir: /mnt/ssd1/zhuowei/regraph-cache/arxiv_raw
+  prompt_template: "{question}\n"
+  max_question_tokens: 96
+  max_answer_tokens: 48        # up to ~7 area names
+eval:
+  batch_size: 8
+  max_new_tokens: 48

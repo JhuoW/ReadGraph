@@ -1,0 +1,10 @@
+# CONTROL for NeighborhoodQA-2hop: the model sees only the centre + its DIRECT citations.
+#
+# The gold answer is the set of areas at distance 2 with all distance-1 areas removed, so a
+# model restricted to 1 hop has, by construction, never seen a single node carrying a gold
+# label. Any score it achieves is guessing from correlations, not traversal. This is the
+# control that makes the main hop-2 number interpretable.
+defaults: arxiv_nbrqa_hop2.yaml
+dataset:
+  name: arxiv_nbrqa_hop2_1hop
+  eval_as: arxiv_nbrqa

@@ -1,0 +1,23 @@
+# NLGraph connectivity (Wang et al., NeurIPS 2023) — structural graph reasoning.
+#
+# Baselines (their Table 2, text-davinci-003, PROMPTING on the standard set) are compared in
+# README.md. Protocol asymmetry, stated with every number: their numbers are zero-/few-shot
+# prompting with the edge list IN the prompt; ReGraph is supervised on the train split and
+# never sees the edge list as text.
+#
+# Nodes are bare integers with no attributes — every node shares one placeholder embedding, so
+# topology and the role markers are the only signal (ReGraph.md §2.1 requires only that a node
+# maps to a vector).
+defaults: default.yaml
+dataset:
+  name: nlgraph_connectivity
+  task: connectivity
+  metric: accuracy
+data:
+  nlgraph_raw_dir: /tmp/claude-1003/-home-zhuowei-My-Proj-ReadGraph/df8e5c9e-f370-4a76-92f8-b8b522db3e73/scratchpad/NLGraph/NLGraph
+  prompt_template: "{question}\n"
+  max_question_tokens: 32
+  max_answer_tokens: 4
+eval:
+  batch_size: 16
+  max_new_tokens: 4

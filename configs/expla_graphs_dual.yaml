@@ -1,0 +1,11 @@
+# ExplaGraphs: ReGraph's iterative reading PLUS a serialized-text token channel.
+# Replicates the SceneGraphs augmentation on a second dataset. Graphs are tiny here
+# (5.4 nodes / 4.4 edges -> ~71 serialized tokens), so this costs almost nothing.
+#
+# DEVIATION from ReGraph.md §3.2 (docs/OPEN-QUESTIONS.md Q23) — own results row.
+defaults: expla_graphs.yaml
+dataset:
+  eval_as: expla_graphs
+data:
+  serialize_graph: true
+  max_question_tokens: 512     # 71-token graph + ~90-token question fits easily

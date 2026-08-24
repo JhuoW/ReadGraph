@@ -1,0 +1,80 @@
+# ReGraph default configuration. Dataset files override these.
+# Everything read at runtime must live here. See docs/experimental-protocol.md.
+
+seed: 0
+run_dir: runs/${dataset.name}/${run_name}
+run_name: default
+
+llm:
+  name: meta-llama/Llama-3.1-8B-Instruct  # ReGraph.md 3.2 / OPEN-QUESTIONS Q1; plain-text prompt, no chat template
+  dtype: bfloat16
+  freeze: true
+  gradient_checkpointing: true
+  d_llm: 4096
+  num_layers: 32
+
+model:
+  num_query_tokens: 8               # N_B
+  num_rounds: 3                     # T  -> T+1 = 4 layer groups
+  placeholder_token: "<|reserved_special_token_0|>"  # id occupying B slots in input_ids
+  pad_token: "<|finetune_right_pad_id|>"             # Llama-3.1 dedicated pad token
+
+graph_encoder:
+  name: graph_transformer           # relation-aware; swappable factory
+  num_layers: 4
+  d_graph: 1024
+  heads: 4
+  edge_dim: 1024
+  dropout: 0.1
+
+graph:
+  symmetrize_for_diffusion: true    # OPEN-QUESTIONS Q2
+  add_self_loops: true
+
+reader:
+  d_reader: 1024
+  heads: 8
+  max_hops: 2                       # K
+  share_across_rounds: true         # ReGraph.md 3.3
+  shared_hop_weights: false         # OPEN-QUESTIONS Q4
+  dropout: 0.1                      # unused: ReGraph.md 2.4 puts the single Dropout(R) in Fuse (Q18)
+  w_o_init: zeros                   # zeros = 04-reader.md 4.5 default; normal = trainable attention path (Q17)
+  w_o_init_std: 1.0e-3
+
+fuse:
+  dropout: 0.1
+  share_across_rounds: true         # ReGraph.md 3.3
+
+data:
+  attr_encoder: sentence-transformers/all-roberta-large-v1
+  d_attr: 1024
+  cache_dir: /mnt/ssd1/zhuowei/regraph-cache   # caches live on the SSD, not the root disk
+  raw_dir: data/raw
+  prompt_template: "Question: {question}\n"
+  answer_boundary: "\nAnswer:"      # OPEN-QUESTIONS Q3
+  max_question_tokens: 512          # safety truncation of T_q
+  max_answer_tokens: 32             # teacher-forcing answer cap, OPEN-QUESTIONS Q12
+  roles:
+    enabled: true
+    match: normalized_exact
+    use_webqsp_topic_entity: true
+
+train:
+  optimizer: adamw
+  lr: 1.0e-5
+  lr_mult: {}                       # per-module lr multipliers; empty = protocol (Q19)
+  weight_decay: 0.05
+  no_decay_on: [bias, norm, b_base, role_emb]
+  scheduler: cosine
+  warmup_ratio: 0.05                # OPEN-QUESTIONS Q5
+  max_epochs: 10
+  batch_size: 4
+  grad_accum: 1
+  grad_clip: 1.0
+  early_stopping_patience: 2
+  select_by: val_loss
+
+eval:
+  max_new_tokens: 32
+  do_sample: false                  # greedy
+  batch_size: 8

@@ -1,0 +1,14 @@
+# NeighborhoodQA, 0-HOP CONTROL: the ego-subgraph is the centre node only.
+#
+# Isolates the neighbourhood's contribution. The num_rounds=0 control (set-F1 6.98) removes all
+# graph information — including which paper is being asked about, since the prompt is a fixed
+# question — so it cannot tell "read the neighbourhood" from "read the centre node". Here the
+# centre's text still flows through the graph channel and only its neighbours are removed, with
+# ground truth and splits identical to the full run.
+#
+# Expected if the task truly needs the neighbourhood: ~63.81 (the measured "own area" shortcut),
+# well below the full run's 83.87.
+defaults: arxiv_nbrqa.yaml
+dataset:
+  name: arxiv_nbrqa_zerohop
+  eval_as: arxiv_nbrqa
