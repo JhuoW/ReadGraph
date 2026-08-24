@@ -67,28 +67,28 @@ protocol-comparable to the block it sits in; see the notes under each table.
 
 #### Table 1 — GraphQA (ExplaGraphs / SceneGraphs / WebQSP)
 
-| #  | Method                                      | Backbone          | LLM    | Graph input           | ExplaGraphs     | SceneGraphs        | WebQSP         |
-| -- | ------------------------------------------- | ----------------- | ------ | --------------------- | --------------- | ------------------ | -------------- |
-|    | *Inference only*                          |                   |        |                       |                 |                    |                |
-| 1  | Zero-shot ᵃ                                | Llama2-7b         | frozen | none                  | 56.50           | 39.74              | 41.06          |
-| 2  | Zero-shot (base) ᵇ                         | Llama-3.2-3B      | frozen | none                  | 13.5            | 33.1               | 32.7           |
-| 3  | Zero-shot (chat) ᵇ                         | Llama-3.2-3B      | frozen | none                  | 52.6            | 50.7               | 53.4           |
-| 4  | KAPING ᵇ                                   | Llama-3.2-3B      | frozen | text                  | 62.2            | 43.7               | 52.6           |
-|    | *Tuning without graph structure*          |                   |        |                       |                 |                    |                |
-| 5  | Prompt tuning ᵃ                            | Llama2-7b         | frozen | none                  | 57.63 ±2.43    | 63.41 ±0.24       | 48.34 ±0.64   |
-| 6  | Prompt tuning ᵇ                            | Llama-3.2-3B      | frozen | none                  | 60.2            | 58.3               | 57.9           |
-| 7  | LoRA ᵇ                                     | Llama-3.2-3B      | tuned  | text                  | 88.9            | 85.3               | 71.1           |
-|    | *Tuning with graph structure*             |                   |        |                       |                 |                    |                |
-| 8  | GraphToken ᵃ                               | Llama2-7b         | frozen | vector                | 85.08 ±5.51    | 49.03 ±1.05       | 57.05 ±0.74   |
-| 9  | KG-Adapter ᵇ                               | Llama-3.2-3B      | frozen | vector                | —              | —                 | 68.7           |
-| 10 | GRAG ᵇ                                     | Llama-3.2-3B      | frozen | text+vector           | 88.9            | —                 | 68.9           |
-| 11 | G-Retriever ᵃ                              | Llama2-7b         | frozen | text+vector           | 85.16 ±0.92    | 81.31 ±1.62       | 70.49 ±1.21   |
-| 12 | G-Retriever w/ LoRA ᵃ                      | Llama2-7b         | tuned  | text+vector           | 87.05 ±3.29    | 86.83 ±0.72       | 73.79 ±0.70   |
-| 13 | GRAFF ᵇ                                    | Llama-3.2-3B      | frozen | text+vector           | **92.5**  | **90.2**     | **72.2** |
-|    | *This work*                               |                   |        |                       |                 |                    |                |
-| 14 | **ReGraph (ours)**                    | Llama-3.1-8B-Inst | frozen | **vector only** | **92.42** | 51.83              | 62.22          |
+| #  | Method                                      | Backbone          | LLM    | Graph input           | ExplaGraphs     | SceneGraphs     | WebQSP         |
+| -- | ------------------------------------------- | ----------------- | ------ | --------------------- | --------------- | --------------- | -------------- |
+|    | *Inference only*                          |                   |        |                       |                 |                 |                |
+| 1  | Zero-shot ᵃ                                | Llama2-7b         | frozen | none                  | 56.50           | 39.74           | 41.06          |
+| 2  | Zero-shot (base) ᵇ                         | Llama-3.2-3B      | frozen | none                  | 13.5            | 33.1            | 32.7           |
+| 3  | Zero-shot (chat) ᵇ                         | Llama-3.2-3B      | frozen | none                  | 52.6            | 50.7            | 53.4           |
+| 4  | KAPING ᵇ                                   | Llama-3.2-3B      | frozen | text                  | 62.2            | 43.7            | 52.6           |
+|    | *Tuning without graph structure*          |                   |        |                       |                 |                 |                |
+| 5  | Prompt tuning ᵃ                            | Llama2-7b         | frozen | none                  | 57.63 ±2.43    | 63.41 ±0.24    | 48.34 ±0.64   |
+| 6  | Prompt tuning ᵇ                            | Llama-3.2-3B      | frozen | none                  | 60.2            | 58.3            | 57.9           |
+| 7  | LoRA ᵇ                                     | Llama-3.2-3B      | tuned  | text                  | 88.9            | 85.3            | 71.1           |
+|    | *Tuning with graph structure*             |                   |        |                       |                 |                 |                |
+| 8  | GraphToken ᵃ                               | Llama2-7b         | frozen | vector                | 85.08 ±5.51    | 49.03 ±1.05    | 57.05 ±0.74   |
+| 9  | KG-Adapter ᵇ                               | Llama-3.2-3B      | frozen | vector                | —              | —              | 68.7           |
+| 10 | GRAG ᵇ                                     | Llama-3.2-3B      | frozen | text+vector           | 88.9            | —              | 68.9           |
+| 11 | G-Retriever ᵃ                              | Llama2-7b         | frozen | text+vector           | 85.16 ±0.92    | 81.31 ±1.62    | 70.49 ±1.21   |
+| 12 | G-Retriever w/ LoRA ᵃ                      | Llama2-7b         | tuned  | text+vector           | 87.05 ±3.29    | 86.83 ±0.72    | 73.79 ±0.70   |
+| 13 | GRAFF ᵇ                                    | Llama-3.2-3B      | frozen | text+vector           | **92.5**  | **90.2**  | **72.2** |
+|    | *This work*                               |                   |        |                       |                 |                 |                |
+| 14 | **ReGraph (ours)**                    | Llama-3.1-8B-Inst | frozen | **vector only** | **92.42** | 51.83           | 62.22          |
 | 15 | **ReGraph + token channel (ours)** † | Llama-3.1-8B-Inst | frozen | text+vector           | 86.82           | **89.41** | n/a ‡         |
-| 16 | *token channel only, no reader (ours)*    | Llama-3.1-8B-Inst | frozen | text                  | 81.05           | 74.93 †           | n/a ‡         |
+| 16 | *token channel only, no reader (ours)*    | Llama-3.1-8B-Inst | frozen | text                  | 81.05           | 74.93 †        | n/a ‡         |
 
 ᵃ He et al., NeurIPS 2024 (arXiv:2402.07630) Table 3. ᵇ Chaudhary et al., Findings of EACL 2026,
 Table 1 — evaluated on **PCST-retrieved subgraphs** (their Table 2: WebQSP 8.39 avg nodes,
@@ -130,8 +130,14 @@ that split is analysed below.
 | -------------------------------------- | ------------------------- | -------------------- | --------------- | --------------- | --------------- |
 | Majority class                         | —                        | —                   | 21.90           | —              | —              |
 | GraphTranslator ᶜ                     | ChatGLM2-6B, frozen       | zero-shot            | 28.48           | 37.62           | 39.87           |
-| **ReGraph (ours)**               | Llama-3.1-8B-Inst, frozen | **supervised** | **71.75** | **92.58** | **96.40** |
+| **ReGraph (ours)**               | Llama-3.1-8B-Inst, frozen | **supervised** | 71.75           | 92.58           | 96.40           |
+| **ReGraph (ours), 3B**           | Llama-3.2-3B-Inst, frozen | **supervised** | **72.28** | **93.23** | **96.90** |
 | ReGraph + alignment pretraining (ours) | Llama-3.1-8B-Inst, frozen | supervised           | 71.45           | 92.28           | 96.65           |
+
+The 3B backbone matches or slightly exceeds the 8B one on all three ranking metrics (+0.50 / +0.65
+/ +0.50), none of them significant (0.7-1.8 SE, n=4,000) — the backbone-insensitivity signature
+discussed under "Backbone sensitivity" below. Top-1 is quoted from generation; the likelihood-rank
+Top-1 is 71.60 (8B) and 72.10 (3B).
 
 ᶜ Zhang et al., WWW 2024, Table 1. **Protocols differ** — GraphTranslator is zero-shot, ReGraph
 is trained on 20,000 ogbn-arxiv nodes with a stronger backbone, so this is not a like-for-like
@@ -221,7 +227,7 @@ Same protocol as Table 4: open-ended generation of the class name, no classifica
 | LLaGA-ND-7B ᵉ               | Vicuna-7B, frozen         | 95.03           |
 | LLaGA-HO-7B ᵉ               | Vicuna-7B, frozen         | 95.03           |
 | **ReGraph (ours)**     | Llama-3.1-8B-Inst, frozen | 89.98           |
-| *ReGraph (ours), 3B*         | Llama-3.2-3B-Inst, frozen | *89.37*       |
+| *ReGraph (ours), 3B*       | Llama-3.2-3B-Inst, frozen | *89.37*       |
 
 ᵉ Chen et al., ICML 2024, Table 1, "Single Focus" block — the same table and setting as Table 4.
 
@@ -281,10 +287,10 @@ The 1-hop control is built by truncating the same store — `examples.json` is *
 identical**, only the graphs shrink (53.87 → 8.43 mean nodes), so splits, answers and question text
 match exactly.
 
-| Configuration | mean nodes seen | set-F1 | exact-set match |
-| --- | --- | --- | --- |
-| **1-hop control** (gold labels structurally invisible) | 8.43 | 48.66 | 1.42 |
-| **ReGraph** (full 2-hop) | 53.87 | **56.68** | **2.86** |
+| Configuration                                                | mean nodes seen | set-F1          | exact-set match |
+| ------------------------------------------------------------ | --------------- | --------------- | --------------- |
+| **1-hop control** (gold labels structurally invisible) | 8.43            | 48.66           | 1.42            |
+| **ReGraph** (full 2-hop)                               | 53.87           | **56.68** | **2.86**  |
 
 Paired over the 3,882 shared test examples the difference is **+7.95 set-F1, SEM 0.33 (24 SE)** —
 real, and not attributable to noise. Two things follow, one positive and one not.
@@ -383,7 +389,7 @@ and the setups line up):
 | ExplaGraphs    | **−0.08** vs GRAFF (92.42 vs 92.5, tied); **+5.4** vs G-Retriever w/ LoRA | nothing from the graph (question text suffices) |
 | ogbn-arxiv     | +43.3 vs GraphTranslator (different protocol)                                          | coarse topic of one node                        |
 | Cora           | −2.5 vs LLaGA / GNN band                                                              | coarse topic of one node                        |
-| PubMed         | **−5.05** vs LLaGA, −5.19 vs SAGN (Table 5)                                     | coarse topic of one node                        |
+| PubMed         | **−5.05** vs LLaGA, −5.19 vs SAGN (Table 5)                                    | coarse topic of one node                        |
 | NeighborhoodQA | +20.1 over its shortcut floor                                                          | a*set* of areas aggregated over neighbours    |
 | WebQSP         | −9.98 vs GRAFF; −11.6 vs G-Retriever w/ LoRA                                         | an exact entity surface form                    |
 | SceneGraphs    | −38.4 vs GRAFF                                                                        | binding one attribute to one object             |
