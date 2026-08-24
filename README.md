@@ -351,23 +351,30 @@ Each graph holds 5 equally sized thematic communities (12 nodes each); exactly o
 more densely (`p_hot` 0.60 vs `p_in` 0.12). The question names no node. The answer is the dense
 community's theme, as free text. 11,000 examples per arm.
 
-| Configuration | Accuracy | Legality |
-| --- | --- | --- |
-| Chance — **analytic, not estimated** | 20.00 | — |
-| **Control arm** (density contrast removed, label random) | **19.80** | 100.00 |
-| **ReGraph** | **99.05** | 100.00 |
+| Configuration | Llama-3.1-8B | Llama-3.2-3B | Legality |
+| --- | --- | --- | --- |
+| Chance — **analytic, not estimated** | 20.00 | 20.00 | — |
+| **Control arm** (density contrast removed, label random) | **19.80** | **20.05** | 100.00 |
+| **ReGraph** | **99.05** | **99.15** | 100.00 |
 
 **The control is the point.** All five themes appear in every graph, each is equally likely to be
 the dense one, and communities are equal in size, so no topology-ignoring policy can beat 1/k.
 The control arm removes the density contrast and randomises the label, making the task
 unanswerable by construction — any score above chance there would mean the generator leaks and
-99.05 is void. It lands at 19.80, **0.2 SE from analytic chance**. This is the first benchmark
-here with a falsifiable validity check, and it passes.
+99.05 is void. It lands at 19.80 on the 8B backbone and 20.05 on the 3B one — **0.2 SE and 0.06 SE from
+analytic chance**. The leakage check therefore passes *independently on two backbones*, so it is
+not an 8B coincidence. This is the only benchmark here with a falsifiable validity check.
 
 **Both channels are load-bearing.** Topology finds the dense region but cannot name it; text
 names all five themes but cannot say which is anomalous. That is exactly the `Read` operation of
 §2.3, and it is what NeighborhoodQA (partly solvable from the centre node's text, 72.65 of 83.87)
 and NLGraph (pure topology, no semantics) each fail to isolate.
+
+**It measures the graph interface, not the language model.** Halving the backbone moves the
+result by +0.10 (99.05 → 99.15, well inside noise at n=2,000), and the 3B run reaches a *lower*
+validation loss (0.0089 vs 0.0143). This is the same signature as NeighborhoodQA (−0.05) and the
+opposite of WebQSP (−11.06), which is how that dataset was diagnosed as scoring on the backbone's
+parametric knowledge rather than on graph reading.
 
 **Diagnostics.** α collapses onto **hop 2** (`[0.000, 0.000, 0.999]` in all three rounds) with
 gates at 0.62 / 0.83 / 0.82. On the control arm the gates collapse to 0.05 / 0.10 / 0.11 — the
@@ -399,8 +406,10 @@ Llama-3.1-8B-Instruct. Trainable parameters: 32.70M → 30.56M.
 | NLGraph connectivity | 49.33        | 54.18 | +4.85  |
 | NLGraph cycle        | 52.88        | 47.12 | -5.76  |
 | NeighborhoodQA       | 83.87        | 83.83 | -0.05  |
+| StructuralAnomaly    | 99.05        | 99.15 | +0.10  |
+| — its control arm   | 19.80        | 20.05 | +0.25  |
 
-**Backbone size barely matters — except where the answer is an entity name.** Seven datasets move
+**Backbone size barely matters — except where the answer is an entity name.** Eight datasets move
 by under 2 points, two of them *upward* with the smaller model, and both NLGraph tasks stay at
 chance regardless. WebQSP is the outlier at −11.1 (6.3 SE).
 
@@ -799,12 +808,20 @@ python -m regraph.eval --config configs/<CONFIG>.yaml --ckpt runs/<CKPT>/best.pt
 | — its 1-hop control        | 48.66           | set-F1 | `arxiv_nbrqa_hop2_1hop`     | `arxiv_nbrqa_hop2_1hop/seed0`     |
 | StructuralAnomaly          | **99.05** | Acc    | `synth_anomaly`             | `synth_anomaly/seed0`             |
 | — its unanswerable control | 19.80           | Acc    | `synth_anomaly_control`     | `synth_anomaly_control/seed0`     |
+| StructuralAnomaly, 3B      | **99.15** | Acc    | `synth_anomaly` ᵍ           | `synth_anomaly/llama3b`           |
+| — its control, 3B          | 20.05           | Acc    | `synth_anomaly_control` ᵍ   | `synth_anomaly_control/llama3b`   |
 | SceneGraphs + token channel | **89.41** | Acc    | `scene_graphs_dual`         | `scene_graphs/dual-full`          |
 | NLGraph conn. + token ch.  | 87.87 / 75.74   | Acc    | `nlgraph_connectivity_dual` | `.../dual-A`, `.../dual-B`      |
 | NLGraph cycle + token ch.  | 75.92 / 90.58   | Acc    | `nlgraph_cycle_dual`        | `.../dual-A`, `.../dual-B`      |
 | ExplaGraphs + token ch.    | 86.82 / 81.05   | Acc    | `expla_graphs_dual`         | `expla_graphs/dual-A`, `dual-B` |
 | SceneGraphs + coordinates  | 51.50           | Acc    | `scene_graphs_coords`       | `scene_graphs_sbert_coords/full`  |
 | arXiv + alignment pretrain | 71.45           | Top-1  | `arxiv`                     | `arxiv/aligned`                   |
+
+ᵍ Rows marked ᵍ are 3B runs: append the backbone overrides to the command, exactly as they were
+trained —
+`llm.name=meta-llama/Llama-3.2-3B-Instruct llm.d_llm=3072 llm.num_layers=28`.
+There is no separate 3B config; every 3B result in this repo is the base config plus these three
+overrides.
 
 arXiv Top-3/Top-5 come from a separate ranking pass:
 

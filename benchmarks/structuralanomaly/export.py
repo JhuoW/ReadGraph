@@ -95,8 +95,10 @@ def main() -> None:
                    "is void. ReGraph scores 19.80 on it against an analytic 20.00.",
         "reference_points": {
             "chance (analytic)": 20.00,
-            "ReGraph on the control arm": 19.80,
-            "ReGraph on the main arm": 99.05,
+            "ReGraph 8B, control arm": 19.80,
+            "ReGraph 8B, main arm": 99.05,
+            "ReGraph 3B, control arm": 20.05,
+            "ReGraph 3B, main arm": 99.15,
         },
         "known_limitation": "The structural signal is DEGREE (the dense community's nodes carry "
                             "~4.4 more edges), a first-order local quantity that one round of "

@@ -75,7 +75,7 @@ opposite directions. Read it together with §3.6 before quoting any of these.
 | NLGraph connectivity | 54.80 | 52.58 · 88.79 *w/ token channel* | CoT+SC 86.82 (davinci-003) | B | **not SOTA at 3B** (at chance). 8B+token arguable only — §3.3 |
 | NeighborhoodQA | 83.83 | 83.87 | none | — | no competitor |
 | ogbn-products | 74.27 | 74.21 | none | — | no competitor |
-| StructuralAnomaly | — | 99.05 | none (analytic chance 20.00) | — | no competitor; see §3.4 |
+| StructuralAnomaly | **99.15** | 99.05 | none (analytic chance 20.00) | — | no competitor; controls pass at both sizes (20.05 / 19.80) — see §3.4 |
 
 ### 3.1 ogbn-arxiv — the strongest claim
 
@@ -142,8 +142,14 @@ evidence of a different kind from a leaderboard number. It is the only benchmark
 tests `ReGraph.md` §2.1's **anchor-free** path, which the specification leads with and which
 nothing else evaluates; (ii) has an **analytic** chance floor (20.00) rather than an empirical
 one; and (iii) ships a **falsifiable control** — the density contrast removed and the label
-randomised — that must score chance and does (19.80, 0.2 SE off). Both channels are required by
-construction: topology locates the dense region, text names it, neither alone suffices. Its
+randomised — that must score chance and does, **independently on two backbones**: 19.80 at 8B
+(0.2 SE off) and 20.05 at 3B (0.06 SE off). Both channels are required by construction: topology
+locates the dense region, text names it, neither alone suffices.
+
+It also passes the backbone test that separates graph reading from language-model capacity:
+99.05 (8B) versus 99.15 (3B), a +0.10 move that is well inside noise, matching NeighborhoodQA's
+−0.05 and unlike WebQSP's −11.06. The result therefore belongs to the **3B-only** claim set of
+§3.6 without any loss, though it remains a capability demonstration rather than a SOTA claim. Its
 limits are equally clear: the cue is degree, a first-order local quantity, so it shows
 anchor-free localization by a *local* structural cue and not path-level reasoning; and at the
 released difficulty it is saturated (99.05), so the quantity worth reporting is the
@@ -371,8 +377,8 @@ The defensible headline is **not** a SOTA sweep. Two claims are supported by the
    (+1.53, n.s.). That mixes backbones, so print the backbone in every row, and frame ExplaGraphs
    as an interface/efficiency result: the number reflects the frozen backbone, not graph reading.
 2. **The anchor-free path works, under a falsifiable control.** On StructuralAnomaly (§3.4)
-   ReGraph reaches 99.05 against an analytic chance of 20.00, while the matched control — same
-   generator, density contrast removed — scores 19.80. This is the specification's own headline
+   ReGraph reaches 99.15 at 3B and 99.05 at 8B against an analytic chance of 20.00, while the
+   matched control — same generator, density contrast removed — scores 20.05 and 19.80. This is the specification's own headline
    capability (§2.1) and the only result here validated by a control that could have failed.
    Frame it as a capability demonstration, not a SOTA claim, and state the degree-cue limitation
    with it.

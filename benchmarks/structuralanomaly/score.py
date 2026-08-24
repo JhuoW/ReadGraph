@@ -65,7 +65,7 @@ def main() -> None:
     legal = sum(preds.get(i) is not None for i in gold)
     print(f"arm={a.arm}  n={n}  accuracy={correct/n*100:.2f}  legality={legal/n*100:.2f}")
     print(f"chance={CHANCE:.2f} (analytic)")
-    print("reference: 19.80 ReGraph on control | 99.05 ReGraph on main")
+    print("reference: control 19.80 (8B) / 20.05 (3B) | main 99.05 (8B) / 99.15 (3B)")
     if a.arm == "control" and correct / n * 100 > CHANCE + 3:
         print("WARNING: control is above chance -- the generator leaks and main is void.")
 

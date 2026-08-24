@@ -29,11 +29,13 @@
       "control": -0.0
     }
   },
-  "control": "structuralanomaly_control.jsonl.gz removes the density contrast and draws the label uniformly at random, so the task is unanswerable by construction. Any score above chance there means the generator leaks and the main number is void. ReGraph scores 19.80 on it against an analytic 20.00.",
+  "control": "structuralanomaly_control.jsonl.gz removes the density contrast and draws the label uniformly at random, so the task is unanswerable by construction. Any score above chance there means the generator leaks and the main number is void. ReGraph scores 19.80 (8B) and 20.05 (3B) on it against an analytic 20.00.",
   "reference_points": {
     "chance (analytic)": 20.0,
-    "ReGraph on the control arm": 19.8,
-    "ReGraph on the main arm": 99.05
+    "ReGraph 8B, control arm": 19.8,
+    "ReGraph 8B, main arm": 99.05,
+    "ReGraph 3B, control arm": 20.05,
+    "ReGraph 3B, main arm": 99.15
   },
   "known_limitation": "The structural signal is DEGREE (the dense community's nodes carry ~4.4 more edges), a first-order local quantity that one round of message passing can compute. This benchmark therefore demonstrates anchor-free localization by a local structural cue, not path-level reasoning -- ReGraph remains at chance on NLGraph connectivity and cycle. At density_ratio=5.0 the main arm is also saturated (99.05), so the informative quantity is the accuracy-vs-density_ratio curve, not this single point.",
   "node_vocabulary": [

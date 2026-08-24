@@ -5,7 +5,7 @@ graph by a structural property, then say what that region is *about*.
 
 - **11,000 examples per arm** (8,000 train / 1,000 val / 2,000 test), two arms
 - **Chance is 20.00 and analytic**, not estimated
-- **Ships with a falsifiable control** that must score chance, and does (19.80)
+- **Ships with a falsifiable control** that must score chance, and does on both backbones (19.80 / 20.05)
 - No node is named in the question — every node carries `ROLE_NONE`
 
 ---
@@ -67,17 +67,24 @@ curve; the released setting (`density_ratio = 5.0`) is its easy end.
 
 ## Reference results
 
-Llama-3.1-8B-Instruct, frozen, 8 graph-query tokens, 3 reading rounds, ~32.7M trainable
-parameters — the default ReGraph configuration, unchanged.
+Llama-3.1-8B-Instruct (default) and Llama-3.2-3B-Instruct, both frozen; 8 graph-query tokens,
+3 reading rounds, ~32.7M trainable parameters — the default ReGraph configuration, unchanged.
 
-| Configuration | Accuracy | Legality |
-| --- | --- | --- |
-| Chance (analytic) | 20.00 | — |
-| **Control arm** (density contrast removed) | **19.80** | 100.00 |
-| **ReGraph, main arm** | **99.05** | 100.00 |
+| Configuration | Llama-3.1-8B | Llama-3.2-3B | Legality |
+| --- | --- | --- | --- |
+| Chance (analytic) | 20.00 | 20.00 | — |
+| **Control arm** (density contrast removed) | **19.80** | **20.05** | 100.00 |
+| **ReGraph, main arm** | **99.05** | **99.15** | 100.00 |
 
-The control landing 0.2 SE from analytic chance is what licenses the main number. Report the
-three rows together; 99.05 on its own is not an interpretable result.
+The controls landing 0.2 SE and 0.06 SE from analytic chance are what license the main numbers,
+and they do so *independently on two backbones*, so the check is not a single-model coincidence.
+Report the rows together; 99.05 on its own is not an interpretable result.
+
+**Backbone-insensitive.** Halving the LLM moves the result by +0.10, inside noise at n = 2,000
+(the 3B run even reaches a lower validation loss, 0.0089 vs 0.0143). A graph-reasoning benchmark
+should behave this way: it measures the graph interface, not language-model capacity. Compare
+NeighborhoodQA (−0.05) and, in the other direction, WebQSP (−11.06), where the same test is what
+revealed the score to be carried by the backbone's parametric knowledge.
 
 **Diagnostics.** The per-round hop weights α of `ReGraph.md` §2.3 collapse onto **hop 2**
 (`[0.000, 0.000, 0.999]` in all three rounds) with fusion gates at 0.62 / 0.83 / 0.82 — heavy
