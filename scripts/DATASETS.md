@@ -23,7 +23,7 @@ whose residual stream can be edited mid-stack. Two further facts from our own me
 | NLGraph: connectivity, cycle | Can LMs Solve Graph Problems? (NeurIPS'23) | **best fit for the paper's own claim** | **done** |
 | NLGraph: shortest path, topo sort, Hamilton, matching, flow, GNN | same | poor — answers are node sequences/numbers, i.e. surface form | not run (see below) |
 | Talk like a Graph | Fatemi et al. (ICLR'24) | overlaps NLGraph; same task family, synthetic graphs | not run |
-| Cora / PubMed | GraphGPT (SIGIR'24), LLaGA (ICML'24) | good — same shape as arxiv | not run (needs TAG text release) |
+| Cora / PubMed | GraphGPT (SIGIR'24), LLaGA (ICML'24) | good — same shape as arxiv | **run** — Cora 86.72 / 88.99 (3B), PubMed 89.98; see README Tables 4-5 |
 | ogbn-products | LLaGA | good, but 2.4M nodes → heavy preprocessing | not run |
 | Taobao | GraphTranslator | **impossible** — data not public, human/ChatGPT-rated | blocked |
 | GRAFF's four datasets | GRAFF (Findings EACL'26) | 3 of 4 are GraphQA (already run); comparison blocked by retrieval + backbone confounds | **see below** |
@@ -116,10 +116,10 @@ Notes that affect how the numbers should be read:
 
 ## 4. Not implemented, and what each would take
 
-**Cora / PubMed** (GraphGPT, LLaGA) — same shape as arxiv, so `arxiv_raw.py` is the template:
-swap the loader for the TAG release that carries raw titles/abstracts (PyG's Planetoid ships
-bag-of-words only, which loses the text ReGraph's attribute encoder needs). Cheap to run once
-the text is in hand.
+**Cora / PubMed** (GraphGPT, LLaGA) — **implemented and run**; see `tag_raw.py` and
+`configs/{cora,pubmed}.yaml`. The loader uses the TAPE release for raw titles/abstracts, because
+PyG's Planetoid ships bag-of-words only, which loses the text ReGraph's attribute encoder needs.
+Note the Cora node-ID trap documented in README Table 4.
 
 **ogbn-products** (LLaGA) — 2.4M nodes; the ego-subgraph sampler in `arxiv_raw.py` already
 handles this shape, but expect a long attribute-encoding pass.

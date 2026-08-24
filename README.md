@@ -87,17 +87,24 @@ protocol-comparable to the block it sits in; see the notes under each table.
 | 13 | GRAFF ᵇ                                    | Llama-3.2-3B      | frozen | text+vector           | **92.5**  | **90.2**     | **72.2** |
 |    | *This work*                               |                   |        |                       |                 |                    |                |
 | 14 | **ReGraph (ours)**                    | Llama-3.1-8B-Inst | frozen | **vector only** | **92.42** | 51.83              | 62.22          |
-| 15 | **ReGraph + token channel (ours)** † | Llama-3.1-8B-Inst | frozen | text+vector           | 86.82           | **81.93** † | n/a ‡         |
+| 15 | **ReGraph + token channel (ours)** † | Llama-3.1-8B-Inst | frozen | text+vector           | 86.82           | **89.41** | n/a ‡         |
 | 16 | *token channel only, no reader (ours)*    | Llama-3.1-8B-Inst | frozen | text                  | 81.05           | 74.93 †           | n/a ‡         |
 
 ᵃ He et al., NeurIPS 2024 (arXiv:2402.07630) Table 3. ᵇ Chaudhary et al., Findings of EACL 2026,
 Table 1 — evaluated on **PCST-retrieved subgraphs** (their Table 2: WebQSP 8.39 avg nodes,
 SceneGraph 8.21), whereas rows 14-15 read the **full** graph (WebQSP ~1,371 nodes).
 
-† SceneGraphs cells in rows 15-16 are 3,000-step runs scored on a 1,500-example subset, not the
-full 20,025; ExplaGraphs cells are complete runs. Rows 15-16 **violate `ReGraph.md` §3.2** by
-serializing the graph into the prompt — the "augmentation" configuration, not ReGraph as
-specified. A full-scale SceneGraphs run is in progress.
+† Only the **SceneGraphs cell of row 16** is a short run (3,000 steps, scored on 1,500 examples);
+every other cell in rows 15-16 is complete. Row 15's SceneGraphs figure is the finished 6-epoch
+run over all 20,025 test examples (best validation loss at epoch 3; `runs/scene_graphs/dual-full`).
+
+**Do not subtract row 16 from row 15 on SceneGraphs** — the two differ in training length *and*
+evaluation set, so the difference is not a reader-contribution measurement. The matched A/B is
+81.93 vs 74.93, both at 3,000 steps on the same 1,500 examples (**+7.00 pp, 4.6 SE**), reported in
+full below; a full-scale no-reader control has not been run.
+
+Rows 15-16 **violate `ReGraph.md` §3.2** by serializing the graph into the prompt — the
+"augmentation" configuration, not ReGraph as specified.
 
 ‡ WebQSP cannot take a token channel: serializing its full graph costs **62,703 tokens on
 average** (max 110,458), against Llama-3.1's 128k limit and far past where memory and speed hold
@@ -172,6 +179,7 @@ TAPE's 60/20/20 split, 2-hop ego-subgraphs (mean 17 nodes), 542 test examples.
 | GCN ᵉ                       | —                        | 88.93           |
 | GraphSAGE ᵉ                 | —                        | 88.89           |
 | GAT ᵉ                       | —                        | 88.97           |
+| SGC ᵉ                       | —                        | 87.97           |
 | SAGN ᵉ                      | —                        | **89.19** |
 | NodeFormer ᵉ                | —                        | 88.23           |
 | GPT-3.5 (general setting) ᵉ | GPT-3.5                   | 71.75           |
@@ -196,7 +204,41 @@ from TAPE (`xxhe/tape-cora`: text, labels, split) plus the original LINQS `cora.
 100% label agreement vs 14.29% (chance) for Planetoid ordering; `tag_raw.py` re-checks this at
 build time and raises on mismatch.
 
-#### Table 5 — NeighborhoodQA (open-ended, constructed by this repo)
+#### Table 5 — PubMed (LLaGA lineage, text-attributed)
+
+Same protocol as Table 4: open-ended generation of the class name, no classification head.
+60/20/20 split matching LLaGA's 6:2:2 (19,717 nodes → 11,831 / 3,943 / 3,943), 2-hop ego-subgraphs.
+
+| Method                       | Backbone                  | PubMed (Acc)    |
+| ---------------------------- | ------------------------- | --------------- |
+| GCN ᵉ                       | —                        | 92.96           |
+| GraphSAGE ᵉ                 | —                        | 94.87           |
+| GAT ᵉ                       | —                        | 92.33           |
+| SGC ᵉ                       | —                        | 87.35           |
+| SAGN ᵉ                      | —                        | **95.17** |
+| NodeFormer ᵉ                | —                        | 94.90           |
+| GPT-3.5 (general setting) ᵉ | GPT-3.5                   | 88.00           |
+| LLaGA-ND-7B ᵉ               | Vicuna-7B, frozen         | 95.03           |
+| LLaGA-HO-7B ᵉ               | Vicuna-7B, frozen         | 95.03           |
+| **ReGraph (ours)**     | Llama-3.1-8B-Inst, frozen | 89.98           |
+| *ReGraph (ours), 3B*         | Llama-3.2-3B-Inst, frozen | *89.37*       |
+
+ᵉ Chen et al., ICML 2024, Table 1, "Single Focus" block — the same table and setting as Table 4.
+
+**PubMed is ReGraph's clearest loss among the text-attributed datasets: −5.19 against SAGN and
+−5.05 against LLaGA**, and unlike Cora it is beaten by *every* GNN baseline except SGC. The gap is
+larger than on Cora (−2.5) despite the two tasks being structurally identical, which is consistent
+with PubMed having only three classes: with a 3-way decision the ceiling is high (baselines cluster
+at 92-95) and a frozen vector channel that resolves topics only coarsely loses more by failing on
+the residual hard cases. No intervention was attempted here — PubMed was run as a companion to Cora
+and the gap was recorded, not investigated.
+
+*Note on an earlier defect:* until 2026-08-24 this table did not exist, and the two PubMed baseline
+figures quoted elsewhere in this repo (SAGN 95.17, LLaGA 95.03) carried no citation, in violation
+of the sourcing rule stated at the top of this section. Both were subsequently verified against
+Chen et al., Table 1 and found correct; the missing table and the missing provenance are fixed here.
+
+#### Table 6 — NeighborhoodQA (open-ended, constructed by this repo)
 
 No benchmark surveyed evaluates `ReGraph.md`'s motivating claim of *non-retrieval, open-ended*
 graph queries, so one was built. Task: **"Which arXiv CS subject areas appear among the papers
@@ -226,9 +268,9 @@ tasks do. And the `num_rounds=0` row (6.98) proves less than it looks: the promp
 question, so removing the graph channel also removes any indication of which paper is being
 asked about, leaving only a constant guess.
 
-#### Table 6 — NeighborhoodQA-2hop: does ReGraph actually traverse?
+#### Table 7 — NeighborhoodQA-2hop: does ReGraph actually traverse?
 
-Table 5's task is answerable in part from the centre node alone (citation homophily). A harder
+Table 6's task is answerable in part from the centre node alone (citation homophily). A harder
 variant isolates traversal. Question: *"Look at the papers cited by the papers this one cites.
 Which subject areas appear at that second step, **excluding the ones already cited directly**?"*
 The exclusion is what makes it a control: the gold set is areas at distance exactly 2 **minus every
@@ -261,13 +303,31 @@ round 2: [0.999996, 0.000000, 0.000000]
 
 α collapses onto hop 0 completely. The two-hop signal therefore arrives through the **graph
 encoder**, whose 4 TransformerConv layers already propagate 4 hops before the reader sees the node
-memory, and §2.3's diffusion is redundant with it rather than additive. This reproduces on a task
-built to defeat exactly that shortcut, which makes it the strongest version of the finding: the
-`S̃ = Σ_k Diag(α_k) S⁽⁰⁾ Pᵏ` machinery can be removed without loss on every dataset measured
-here. Recorded in [docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md).
+memory, and on this task §2.3's diffusion is redundant with it rather than additive. That it
+reproduces on a benchmark built to defeat exactly that shortcut makes it the strongest version of
+the finding **for the vector-only configuration**.
+
+**It does not generalise to the token-channel configuration** — a claim made in an earlier revision
+of this section and withdrawn here. The full-scale SceneGraphs dual-channel run
+(`runs/scene_graphs/dual-full`, §"The one intervention that worked") shows α spread genuinely
+across hops at test time, averaged over all 20,025 examples:
+
+```
+round 0: [0.5348, 0.1224, 0.3428]
+round 1: [0.4909, 0.3632, 0.1459]
+round 2: [0.4404, 0.4399, 0.1197]
+```
+
+So the honest statement is conditional: **α collapses onto hop 0 whenever the reader is the only
+graph channel, and spreads once a token channel is also present.** Two readings are still open —
+it may be the token channel that changes what the reader is asked to supply, or simply that
+SceneGraphs rewards multi-hop reading where NeighborhoodQA-2hop does not. Distinguishing them needs
+a vector-only SceneGraphs run compared against this one at equal budget, which has not been done.
+Until then, "§2.3 can be removed" is supported **only** for the vector-only setting. Recorded in
+[docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md).
 
 **Also note the floor.** 48.66 without any gold-labelled node visible means arXiv area
-co-occurrence is highly predictable — the benchmark is harder than Table 5 but still not a pure
+co-occurrence is highly predictable — the benchmark is harder than Table 6 but still not a pure
 traversal test. A reader should treat +7.95 over the control, not 56.68 in isolation, as the
 measure of two-hop reading.
 
@@ -323,7 +383,7 @@ and the setups line up):
 | ExplaGraphs    | **−0.08** vs GRAFF (92.42 vs 92.5, tied); **+5.4** vs G-Retriever w/ LoRA | nothing from the graph (question text suffices) |
 | ogbn-arxiv     | +43.3 vs GraphTranslator (different protocol)                                          | coarse topic of one node                        |
 | Cora           | −2.5 vs LLaGA / GNN band                                                              | coarse topic of one node                        |
-| PubMed         | −5.1 vs LLaGA                                                                         | coarse topic of one node                        |
+| PubMed         | **−5.05** vs LLaGA, −5.19 vs SAGN (Table 5)                                     | coarse topic of one node                        |
 | NeighborhoodQA | +20.1 over its shortcut floor                                                          | a*set* of areas aggregated over neighbours    |
 | WebQSP         | −9.98 vs GRAFF; −11.6 vs G-Retriever w/ LoRA                                         | an exact entity surface form                    |
 | SceneGraphs    | −38.4 vs GRAFF                                                                        | binding one attribute to one object             |
@@ -332,7 +392,8 @@ and the setups line up):
 One mechanism orders all five: the vector channel relays **semantics already present in node
 features**, but cannot **bind attributes to objects** or **compute relations**. Adding a token
 channel supplies exactly those two capabilities, which is why row 15 jumps SceneGraphs from
-51.83 to 81.93 — and the reading rounds still contribute +7.00 pp on top of it.
+51.83 to **89.41** — and at matched budget the reading rounds still contribute +7.00 pp on top of
+serialization.
 
 ### Benchmark 1 — GraphQA (G-Retriever, NeurIPS 2024)
 
@@ -522,10 +583,16 @@ the B-token positions at layers 8/16/24.
 **Iterative graph reading adds +7.00 pp on top of serialization (4.6 SE, highly significant).**
 It is not subsumed by the token channel. This is the first significant positive intervention in
 the project, and it contradicts the prediction made before the run — which is why the
-`num_rounds=0` control was run at all. For reference, 81.93 already passes G-Retriever's frozen
-81.31, though only by 0.62 pp (0.58 SE, not significant on its own) and under a more generous
-setup: the full graph is serialized rather than a PCST subgraph, on an 8B backbone against
-their 7B. G-Retriever w/ LoRA (86.83) and GRAFF (90.2) are still ahead at this step budget.
+`num_rounds=0` control was run at all.
+
+**Trained to convergence, the both-channels arm reaches 89.41** on the full 20,025-example test set
+(6 epochs, best validation loss 0.2239 at epoch 3; `runs/scene_graphs/dual-full`). That clears
+G-Retriever's frozen 81.31 by 8.10 pp, **G-Retriever w/ LoRA's 86.83 by 2.58 pp (11.9 SE)** and
+LoRA-3B's 85.3 by 4.11 — while keeping the LLM frozen, against a LoRA-tuned competitor. GRAFF
+(90.2) remains 0.79 ahead (3.6 SE). Two asymmetries to keep in view: the full graph is serialized
+(truncated to 1,536 tokens) rather than a PCST subgraph, and the backbone is 8B against their
+7B/3B. The no-reader control has not been rerun at this budget, so the +7.00 pp reader
+contribution above is still the 3,000-step measurement, not a measurement at 89.41.
 
 **This changes what ReGraph is being claimed to be.** `ReGraph.md` §3.2 keeps the graph out of
 the context, and that premise is the paper's stated advantage over GraphRAG. A model with a
@@ -634,8 +701,8 @@ residual), not a better configuration of this one.
 
 **Follow-up that resolves this.** The limitation above is about the *vector* channel, and it is
 removed by adding a token channel rather than by improving the vector one — see "The one
-intervention that worked" above: 34.93 → 81.93 on SceneGraphs, of which +7.00 pp is attributable
-to the reading rounds themselves.
+intervention that worked" above: 34.93 → 81.93 at matched budget on SceneGraphs (89.41 trained to
+convergence), of which +7.00 pp is attributable to the reading rounds themselves.
 
 **Diagnostic caveat:** fusion-gate means are *not* a health signal on their own, contrary to
 `docs/components/05-fuse.md` §5.1. The aligned arXiv model runs gates at 0.06 with ‖R‖ = 654,
