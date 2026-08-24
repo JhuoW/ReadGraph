@@ -29,12 +29,12 @@
       "control": -0.0
     }
   },
-  "control": "structuralanomaly_control.jsonl.gz removes the density contrast and draws the label uniformly at random, so the task is unanswerable by construction. Any score above chance there means the generator leaks and the main number is void. ReGraph scores 19.80 (8B) and 20.05 (3B) on it against an analytic 20.00.",
+  "control": "structuralanomaly_control.jsonl.gz removes the density contrast and draws the label uniformly at random, so the task is unanswerable by construction. Any score above chance there means the generator leaks and the main number is void. ReGraph scores 19.87 (8B) and 20.26 (3B) on it against an analytic 20.00.",
   "reference_points": {
     "chance (analytic)": 20.0,
-    "ReGraph 8B, control arm": 19.8,
+    "ReGraph 8B, control arm": 19.87,
     "ReGraph 8B, main arm": 99.05,
-    "ReGraph 3B, control arm": 20.05,
+    "ReGraph 3B, control arm": 20.26,
     "ReGraph 3B, main arm": 99.15
   },
   "known_limitation": "The structural signal is DEGREE (the dense community's nodes carry ~4.4 more edges), a first-order local quantity that one round of message passing can compute. This benchmark therefore demonstrates anchor-free localization by a local structural cue, not path-level reasoning -- ReGraph remains at chance on NLGraph connectivity and cycle. At density_ratio=5.0 the main arm is also saturated (99.05), so the informative quantity is the accuracy-vs-density_ratio curve, not this single point.",
@@ -173,5 +173,6 @@
       "crater lake acidity survey"
     ]
   },
-  "scorer": "benchmarks/structuralanomaly/score.py"
+  "scorer": "benchmarks/structuralanomaly/score.py",
+  "control_value_note": "Control values are means over repeated evaluation (8B: 19.80/19.45/20.35; 3B: 20.05/20.55/20.15/20.30). Re-evaluation is not bit-identical on this arm because the model has no signal, so its class logits are near-tied and bf16 non-associativity flips the argmax on ~0.5% of examples; the main arm reproduces exactly. Read the control as 'indistinguishable from chance', not as an exact figure."
 }

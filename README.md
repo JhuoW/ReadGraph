@@ -354,16 +354,23 @@ community's theme, as free text. 11,000 examples per arm.
 | Configuration | Llama-3.1-8B | Llama-3.2-3B | Legality |
 | --- | --- | --- | --- |
 | Chance — **analytic, not estimated** | 20.00 | 20.00 | — |
-| **Control arm** (density contrast removed, label random) | **19.80** | **20.05** | 100.00 |
+| **Control arm** (density contrast removed, label random) ᵃ | **19.87** | **20.26** | 100.00 |
 | **ReGraph** | **99.05** | **99.15** | 100.00 |
 
 **The control is the point.** All five themes appear in every graph, each is equally likely to be
 the dense one, and communities are equal in size, so no topology-ignoring policy can beat 1/k.
 The control arm removes the density contrast and randomises the label, making the task
 unanswerable by construction — any score above chance there would mean the generator leaks and
-99.05 is void. It lands at 19.80 on the 8B backbone and 20.05 on the 3B one — **0.2 SE and 0.06 SE from
-analytic chance**. The leakage check therefore passes *independently on two backbones*, so it is
-not an 8B coincidence. This is the only benchmark here with a falsifiable validity check.
+99.05 is void. It lands at 19.87 (8B) and 20.26 (3B) — **0.15 SE and 0.29 SE from analytic chance**. The
+leakage check therefore passes *independently on two backbones*, so it is not an 8B coincidence.
+This is the only benchmark here with a falsifiable validity check.
+
+ᵃ Control values are means over repeated evaluation of one checkpoint (8B: 19.80 / 19.45 / 20.35;
+3B: 20.05 / 20.55 / 20.15 / 20.30). Re-evaluation is not bit-identical **on this arm specifically**
+because the model has no signal, so its logits over the five themes are near-tied and bf16
+non-associativity flips the argmax on ~0.5% of examples. Confident predictions do not move:
+ExplaGraphs and the main arm reproduce exactly. Report the control as *indistinguishable from
+chance*, not as a particular value.
 
 **Both channels are load-bearing.** Topology finds the dense region but cannot name it; text
 names all five themes but cannot say which is anomalous. That is exactly the `Read` operation of
@@ -407,7 +414,7 @@ Llama-3.1-8B-Instruct. Trainable parameters: 32.70M → 30.56M.
 | NLGraph cycle        | 52.88        | 47.12 | -5.76  |
 | NeighborhoodQA       | 83.87        | 83.83 | -0.05  |
 | StructuralAnomaly    | 99.05        | 99.15 | +0.10  |
-| — its control arm   | 19.80        | 20.05 | +0.25  |
+| — its control arm   | 19.87        | 20.26 | +0.39 ᵃ |
 
 **Backbone size barely matters — except where the answer is an entity name.** Eight datasets move
 by under 2 points, two of them *upward* with the smaller model, and both NLGraph tasks stay at
@@ -807,9 +814,9 @@ python -m regraph.eval --config configs/<CONFIG>.yaml --ckpt runs/<CKPT>/best.pt
 | NeighborhoodQA-2hop        | **56.68** | set-F1 | `arxiv_nbrqa_hop2`          | `arxiv_nbrqa_hop2/seed0`          |
 | — its 1-hop control        | 48.66           | set-F1 | `arxiv_nbrqa_hop2_1hop`     | `arxiv_nbrqa_hop2_1hop/seed0`     |
 | StructuralAnomaly          | **99.05** | Acc    | `synth_anomaly`             | `synth_anomaly/seed0`             |
-| — its unanswerable control | 19.80           | Acc    | `synth_anomaly_control`     | `synth_anomaly_control/seed0`     |
+| — its unanswerable control | ~19.9           | Acc    | `synth_anomaly_control`     | `synth_anomaly_control/seed0`     |
 | StructuralAnomaly, 3B      | **99.15** | Acc    | `synth_anomaly` ᵍ           | `synth_anomaly/llama3b`           |
-| — its control, 3B          | 20.05           | Acc    | `synth_anomaly_control` ᵍ   | `synth_anomaly_control/llama3b`   |
+| — its control, 3B          | ~20.3           | Acc    | `synth_anomaly_control` ᵍ   | `synth_anomaly_control/llama3b`   |
 | SceneGraphs + token channel | **89.41** | Acc    | `scene_graphs_dual`         | `scene_graphs/dual-full`          |
 | NLGraph conn. + token ch.  | 87.87 / 75.74   | Acc    | `nlgraph_connectivity_dual` | `.../dual-A`, `.../dual-B`      |
 | NLGraph cycle + token ch.  | 75.92 / 90.58   | Acc    | `nlgraph_cycle_dual`        | `.../dual-A`, `.../dual-B`      |
@@ -887,9 +894,19 @@ python runs/_logs/sweep.py --config configs/scene_graphs_dual.yaml --steps 3000 
 
 ### Determinism
 
-Runs are seeded (`seed: 0`) and evaluation is deterministic — two evaluations of one checkpoint
-give byte-identical predictions (verified). Training is *not* bit-reproducible across different
-GPUs or driver versions; expect the last decimal to move.
+Runs are seeded (`seed: 0`). Evaluation is deterministic **where the model is confident**: two
+evaluations of one checkpoint give byte-identical predictions on ExplaGraphs (92.42 twice) and on
+StructuralAnomaly's main arm (99.15 twice), verified.
+
+It is *not* deterministic where the model is at chance. On StructuralAnomaly's control arm — a
+task with no signal by construction — the five class logits are near-tied, and bf16
+non-associativity combined with occupancy-dependent kernel selection flips the argmax on about
+0.5% of examples: seven re-evaluations spanning both backbones spread over 19.45-20.55. This
+affects only near-tied predictions, so it changes no conclusion, but any *control* value in this
+repo should be read as "indistinguishable from chance", not as an exact figure.
+
+Training is not bit-reproducible across different GPUs or driver versions; expect the last
+decimal to move.
 
 ## Tests
 

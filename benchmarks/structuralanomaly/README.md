@@ -5,7 +5,7 @@ graph by a structural property, then say what that region is *about*.
 
 - **11,000 examples per arm** (8,000 train / 1,000 val / 2,000 test), two arms
 - **Chance is 20.00 and analytic**, not estimated
-- **Ships with a falsifiable control** that must score chance, and does on both backbones (19.80 / 20.05)
+- **Ships with a falsifiable control** that must score chance, and does on both backbones (~19.9 / ~20.3)
 - No node is named in the question — every node carries `ROLE_NONE`
 
 ---
@@ -73,12 +73,19 @@ Llama-3.1-8B-Instruct (default) and Llama-3.2-3B-Instruct, both frozen; 8 graph-
 | Configuration | Llama-3.1-8B | Llama-3.2-3B | Legality |
 | --- | --- | --- | --- |
 | Chance (analytic) | 20.00 | 20.00 | — |
-| **Control arm** (density contrast removed) | **19.80** | **20.05** | 100.00 |
+| **Control arm** (density contrast removed) ᵃ | **19.87** | **20.26** | 100.00 |
 | **ReGraph, main arm** | **99.05** | **99.15** | 100.00 |
 
-The controls landing 0.2 SE and 0.06 SE from analytic chance are what license the main numbers,
+The controls landing 0.15 SE and 0.29 SE from analytic chance are what license the main numbers,
 and they do so *independently on two backbones*, so the check is not a single-model coincidence.
 Report the rows together; 99.05 on its own is not an interpretable result.
+
+ᵃ Control values are means over repeated evaluation of one checkpoint (8B: 19.80 / 19.45 / 20.35;
+3B: 20.05 / 20.55 / 20.15 / 20.30). Re-evaluation is not bit-identical **on this arm**: the model
+has no signal, so its five class logits are near-tied and bf16 non-associativity flips the argmax
+on about 0.5% of examples. The main arm reproduces exactly (99.15 twice). Treat the control as
+*indistinguishable from chance* rather than as a fixed number — which is all the validity check
+requires.
 
 **Backbone-insensitive.** Halving the LLM moves the result by +0.10, inside noise at n = 2,000
 (the 3B run even reaches a lower validation loss, 0.0089 vs 0.0143). A graph-reasoning benchmark

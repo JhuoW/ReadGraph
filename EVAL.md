@@ -48,7 +48,7 @@ Both rules are applied **symmetrically** below, including where they cost us (§
 | NLGraph cycle | 55.92 | few-shot 70.33 | −14.41 | at chance |
 | ogbn-products | 74.21 | — | — | no comparable baseline |
 | NeighborhoodQA | 83.87 | — | — | benchmark constructed here |
-| StructuralAnomaly | 99.05 | — | — | benchmark constructed here (chance 20.00, control 19.80) |
+| StructuralAnomaly | 99.05 | — | — | benchmark constructed here (chance 20.00, control ~19.9) |
 
 ᵍ Chen et al., ICML 2024, Table 1, Single Focus block. This figure and LLaGA's PubMed 95.03 were
 quoted without a citation until 2026-08-24; both were then verified against the paper and found
@@ -75,7 +75,7 @@ opposite directions. Read it together with §3.6 before quoting any of these.
 | NLGraph connectivity | 54.80 | 52.58 · 88.79 *w/ token channel* | CoT+SC 86.82 (davinci-003) | B | **not SOTA at 3B** (at chance). 8B+token arguable only — §3.3 |
 | NeighborhoodQA | 83.83 | 83.87 | none | — | no competitor |
 | ogbn-products | 74.27 | 74.21 | none | — | no competitor |
-| StructuralAnomaly | **99.15** | 99.05 | none (analytic chance 20.00) | — | no competitor; controls pass at both sizes (20.05 / 19.80) — see §3.4 |
+| StructuralAnomaly | **99.15** | 99.05 | none (analytic chance 20.00) | — | no competitor; controls pass at both sizes (~20.3 / ~19.9) — see §3.4 |
 
 ### 3.1 ogbn-arxiv — the strongest claim
 
@@ -142,8 +142,8 @@ evidence of a different kind from a leaderboard number. It is the only benchmark
 tests `ReGraph.md` §2.1's **anchor-free** path, which the specification leads with and which
 nothing else evaluates; (ii) has an **analytic** chance floor (20.00) rather than an empirical
 one; and (iii) ships a **falsifiable control** — the density contrast removed and the label
-randomised — that must score chance and does, **independently on two backbones**: 19.80 at 8B
-(0.2 SE off) and 20.05 at 3B (0.06 SE off). Both channels are required by construction: topology
+randomised — that must score chance and does, **independently on two backbones**: 19.87 at 8B
+(0.15 SE off) and 20.26 at 3B (0.29 SE off), each a mean over repeated evaluation. Both channels are required by construction: topology
 locates the dense region, text names it, neither alone suffices.
 
 It also passes the backbone test that separates graph reading from language-model capacity:
@@ -378,7 +378,8 @@ The defensible headline is **not** a SOTA sweep. Two claims are supported by the
    as an interface/efficiency result: the number reflects the frozen backbone, not graph reading.
 2. **The anchor-free path works, under a falsifiable control.** On StructuralAnomaly (§3.4)
    ReGraph reaches 99.15 at 3B and 99.05 at 8B against an analytic chance of 20.00, while the
-   matched control — same generator, density contrast removed — scores 20.05 and 19.80. This is the specification's own headline
+   matched control — same generator, density contrast removed — scores 20.26 and 19.87,
+   indistinguishable from chance on both. This is the specification's own headline
    capability (§2.1) and the only result here validated by a control that could have failed.
    Frame it as a capability demonstration, not a SOTA claim, and state the degree-cue limitation
    with it.

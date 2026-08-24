@@ -23,6 +23,7 @@ from regraph.data.synth_raw import THEMES, EDGE_TEXT
 from regraph.utils.config import load_config
 
 OUT = Path(__file__).parent
+CONTROL_NOTE = ("Control values are means over repeated evaluation (8B: 19.80/19.45/20.35; 3B: 20.05/20.55/20.15/20.30). Re-evaluation is not bit-identical on this arm because the model has no signal, so its class logits are near-tied and bf16 non-associativity flips the argmax on ~0.5% of examples; the main arm reproduces exactly. Read the control as 'indistinguishable from chance', not as an exact figure.")
 ARMS = {"main": "configs/synth_anomaly.yaml", "control": "configs/synth_anomaly_control.yaml"}
 
 
@@ -95,11 +96,12 @@ def main() -> None:
                    "is void. ReGraph scores 19.80 on it against an analytic 20.00.",
         "reference_points": {
             "chance (analytic)": 20.00,
-            "ReGraph 8B, control arm": 19.80,
+            "ReGraph 8B, control arm": 19.87,
             "ReGraph 8B, main arm": 99.05,
-            "ReGraph 3B, control arm": 20.05,
+            "ReGraph 3B, control arm": 20.26,
             "ReGraph 3B, main arm": 99.15,
         },
+        "control_value_note": CONTROL_NOTE,
         "known_limitation": "The structural signal is DEGREE (the dense community's nodes carry "
                             "~4.4 more edges), a first-order local quantity that one round of "
                             "message passing can compute. This benchmark therefore demonstrates "
