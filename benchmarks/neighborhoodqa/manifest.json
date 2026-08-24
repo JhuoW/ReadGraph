@@ -1,0 +1,28 @@
+{
+  "name": "NeighborhoodQA",
+  "version": "1.0",
+  "built_from": "ogbn-arxiv (OGB) + titleabs.tsv",
+  "task": "Given a paper's sampled citation ego-subgraph, name the SET of arXiv CS subject areas represented among its 1-hop neighbours.",
+  "output": "free text; a variable-length list of area names",
+  "metric": "set-F1 (per-example, averaged); exact-set-match reported alongside",
+  "examples": 25894,
+  "splits": {
+    "train": 19902,
+    "val": 1999,
+    "test": 3993
+  },
+  "mean_areas_per_answer": 2.28,
+  "sampling": {
+    "num_hops": 2,
+    "fanout": 10,
+    "note": "ground truth is computed on the SAMPLED subgraph, not the full neighbourhood, so the task is answerable from what is shown"
+  },
+  "reference_points": {
+    "no_graph_at_all (num_rounds=0)": 6.98,
+    "answer_centre_paper_own_area (analytic shortcut)": 63.81,
+    "centre_node_only (0-hop control)": 72.65,
+    "ReGraph full 2-hop": 83.87
+  },
+  "node_text": "node indices refer to ogbn-arxiv; recover title+abstract from https://snap.stanford.edu/ogb/data/misc/ogbn_arxiv/titleabs.tsv.gz via mapping/nodeidx2paperid.csv.gz",
+  "scorer": "benchmarks/neighborhoodqa/score.py"
+}
