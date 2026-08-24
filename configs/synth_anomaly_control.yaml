@@ -1,0 +1,25 @@
+# CONTROL for StructuralAnomaly: the density contrast is REMOVED (all communities equal) and
+# the label is drawn uniformly at random, so the question is unanswerable by construction.
+# Any score above chance (20.00) means the generator leaks and the main number is void.
+# This is the falsifiable check the other benchmarks in this repo lack.
+defaults: default.yaml
+dataset:
+  name: synth_anomaly_control
+  eval_as: synth_anomaly_control       # unknown to compute_metric -> falls through to classes.json
+  metric: accuracy
+  num_communities: 5
+  community_size: 12
+  p_in: 0.12
+  density_ratio: 5.0           # p_hot = 0.60; mean degree gap hot vs rest ~ 4.4
+  p_out: 0.01
+  n_train: 8000
+  n_val: 1000
+  n_test: 2000
+  anomaly: false
+data:
+  prompt_template: "{question}\n"
+  max_question_tokens: 96
+  max_answer_tokens: 16
+eval:
+  batch_size: 8
+  max_new_tokens: 16

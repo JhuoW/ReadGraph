@@ -1,0 +1,12 @@
+# NeighborhoodQA-Temporal: aggregate areas over cited papers published before a per-example
+# cut-off. Same answer space and metric as arxiv_nbrqa, but the answer now depends on a
+# per-node attribute (the year, surfaced in the node text as "[2015] title. abstract").
+#
+# The unfiltered answer is a strict superset of the gold set, so "ignore the filter" has an
+# exactly computable score, reported as attr_blind_setF1 by the builder. That is the number
+# ReGraph must beat to demonstrate attribute binding.
+defaults: arxiv_nbrqa.yaml
+dataset:
+  name: arxiv_nbrqa_year
+  eval_as: arxiv_nbrqa
+  year_filter: true

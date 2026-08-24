@@ -1,0 +1,31 @@
+# StructuralAnomaly — synthetic, ANCHOR-FREE open-ended graph reasoning.
+#
+# "One group of closely related items is far more densely interconnected than any other group.
+#  What is that group about?"  No node is named; every node carries ROLE_NONE, which is the
+# anchor-free path of ReGraph.md §2.1 -- the spec's headline capability, untested until now.
+#
+# Chance is exactly 100/num_communities = 20.00: all five themes appear in every graph, each is
+# equally likely to be the dense one, and all communities are the same size, so no policy that
+# ignores topology can do better. Pair with configs/synth_anomaly_control.yaml, which removes
+# the density contrast and MUST score chance.
+defaults: default.yaml
+dataset:
+  name: synth_anomaly
+  eval_as: synth_anomaly       # unknown to compute_metric -> falls through to classes.json
+  metric: accuracy
+  num_communities: 5
+  community_size: 12
+  p_in: 0.12
+  density_ratio: 5.0           # p_hot = 0.60; mean degree gap hot vs rest ~ 4.4
+  p_out: 0.01
+  n_train: 8000
+  n_val: 1000
+  n_test: 2000
+  anomaly: true
+data:
+  prompt_template: "{question}\n"
+  max_question_tokens: 96
+  max_answer_tokens: 16
+eval:
+  batch_size: 8
+  max_new_tokens: 16

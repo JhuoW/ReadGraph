@@ -24,6 +24,7 @@ whose residual stream can be edited mid-stack. Two further facts from our own me
 | NLGraph: shortest path, topo sort, Hamilton, matching, flow, GNN | same | poor — answers are node sequences/numbers, i.e. surface form | not run (see below) |
 | Talk like a Graph | Fatemi et al. (ICLR'24) | overlaps NLGraph; same task family, synthetic graphs | not run |
 | Cora / PubMed | GraphGPT (SIGIR'24), LLaGA (ICML'24) | good — same shape as arxiv | **run** — Cora 86.72 / 88.99 (3B), PubMed 89.98; see README Tables 4-5 |
+| **StructuralAnomaly** (this repo) | none — synthetic | **anchor-free**, the one path `ReGraph.md` §2.1 leads with | **run** — 99.05 vs analytic chance 20.00, control 19.80; see `benchmarks/structuralanomaly/` |
 | ogbn-products | LLaGA | good, but 2.4M nodes → heavy preprocessing | not run |
 | Taobao | GraphTranslator | **impossible** — data not public, human/ChatGPT-rated | blocked |
 | GRAFF's four datasets | GRAFF (Findings EACL'26) | 3 of 4 are GraphQA (already run); comparison blocked by retrieval + backbone confounds | **see below** |

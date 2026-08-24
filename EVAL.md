@@ -48,6 +48,7 @@ Both rules are applied **symmetrically** below, including where they cost us (§
 | NLGraph cycle | 55.92 | few-shot 70.33 | −14.41 | at chance |
 | ogbn-products | 74.21 | — | — | no comparable baseline |
 | NeighborhoodQA | 83.87 | — | — | benchmark constructed here |
+| StructuralAnomaly | 99.05 | — | — | benchmark constructed here (chance 20.00, control 19.80) |
 
 ᵍ Chen et al., ICML 2024, Table 1, Single Focus block. This figure and LLaGA's PubMed 95.03 were
 quoted without a citation until 2026-08-24; both were then verified against the paper and found
@@ -74,6 +75,7 @@ opposite directions. Read it together with §3.6 before quoting any of these.
 | NLGraph connectivity | 54.80 | 52.58 · 88.79 *w/ token channel* | CoT+SC 86.82 (davinci-003) | B | **not SOTA at 3B** (at chance). 8B+token arguable only — §3.3 |
 | NeighborhoodQA | 83.83 | 83.87 | none | — | no competitor |
 | ogbn-products | 74.27 | 74.21 | none | — | no competitor |
+| StructuralAnomaly | — | 99.05 | none (analytic chance 20.00) | — | no competitor; see §3.4 |
 
 ### 3.1 ogbn-arxiv — the strongest claim
 
@@ -130,9 +132,22 @@ cycle configuration has the graph reader **switched off** (89.81 vs 76.75 with i
 
 ### 3.4 Uncontested by construction
 
-NeighborhoodQA (83.87 set-F1) is a benchmark built in this repo; ogbn-products (74.21) is on a
-TAPE-derived subset with no matching published baseline. Both are SOTA only in the sense that
-nobody else has run them. Neither should be presented as a SOTA claim.
+NeighborhoodQA (83.87 set-F1) and StructuralAnomaly (99.05) are benchmarks built in this repo;
+ogbn-products (74.21) is on a TAPE-derived subset with no matching published baseline. All three
+are SOTA only in the sense that nobody else has run them. None should be presented as a SOTA
+claim.
+
+**StructuralAnomaly is nonetheless the strongest positive evidence in this project**, and it is
+evidence of a different kind from a leaderboard number. It is the only benchmark here that (i)
+tests `ReGraph.md` §2.1's **anchor-free** path, which the specification leads with and which
+nothing else evaluates; (ii) has an **analytic** chance floor (20.00) rather than an empirical
+one; and (iii) ships a **falsifiable control** — the density contrast removed and the label
+randomised — that must score chance and does (19.80, 0.2 SE off). Both channels are required by
+construction: topology locates the dense region, text names it, neither alone suffices. Its
+limits are equally clear: the cue is degree, a first-order local quantity, so it shows
+anchor-free localization by a *local* structural cue and not path-level reasoning; and at the
+released difficulty it is saturated (99.05), so the quantity worth reporting is the
+accuracy-versus-density curve, not the point. See README Table 8.
 
 ### 3.5 Variant: excluding GRAFF
 
@@ -355,7 +370,13 @@ The defensible headline is **not** a SOTA sweep. Two claims are supported by the
    third — but only at **8B**, where the margin is significant (+3.52, 3.13 SE) rather than at 3B
    (+1.53, n.s.). That mixes backbones, so print the backbone in every row, and frame ExplaGraphs
    as an interface/efficiency result: the number reflects the frozen backbone, not graph reading.
-2. **Iterative graph reading is not subsumed by serialization.** README Table 3 row 15 minus row 16
+2. **The anchor-free path works, under a falsifiable control.** On StructuralAnomaly (§3.4)
+   ReGraph reaches 99.05 against an analytic chance of 20.00, while the matched control — same
+   generator, density contrast removed — scores 19.80. This is the specification's own headline
+   capability (§2.1) and the only result here validated by a control that could have failed.
+   Frame it as a capability demonstration, not a SOTA claim, and state the degree-cue limitation
+   with it.
+3. **Iterative graph reading is not subsumed by serialization.** README Table 3 row 15 minus row 16
    is +5.77 pp on ExplaGraphs (2.62 SE) and +7.00 pp on SceneGraphs (4.6 SE) — two independent
    datasets where the reading rounds add on top of putting the graph in the prompt.
 

@@ -337,6 +337,50 @@ co-occurrence is highly predictable — the benchmark is harder than Table 6 but
 traversal test. A reader should treat +7.95 over the control, not 56.68 in isolation, as the
 measure of two-hop reading.
 
+#### Table 8 — StructuralAnomaly (synthetic, anchor-free, constructed by this repo)
+
+`ReGraph.md` §2.1 leads with an **anchor-free** query — *"Which region of the graph is becoming
+structurally unstable?"*, where "all nodes receive the `none` marker" and the model "locates
+relevant graph regions through semantic and structural attention rather than beginning from a
+predefined question entity". **Every other benchmark in this repo is anchored** (GraphQA marks
+question entities, the TAG datasets and NeighborhoodQA mark a centre node, NLGraph names both
+endpoints), so the specification's headline capability had never been tested. This synthetic
+benchmark tests it.
+
+Each graph holds 5 equally sized thematic communities (12 nodes each); exactly one is wired far
+more densely (`p_hot` 0.60 vs `p_in` 0.12). The question names no node. The answer is the dense
+community's theme, as free text. 11,000 examples per arm.
+
+| Configuration | Accuracy | Legality |
+| --- | --- | --- |
+| Chance — **analytic, not estimated** | 20.00 | — |
+| **Control arm** (density contrast removed, label random) | **19.80** | 100.00 |
+| **ReGraph** | **99.05** | 100.00 |
+
+**The control is the point.** All five themes appear in every graph, each is equally likely to be
+the dense one, and communities are equal in size, so no topology-ignoring policy can beat 1/k.
+The control arm removes the density contrast and randomises the label, making the task
+unanswerable by construction — any score above chance there would mean the generator leaks and
+99.05 is void. It lands at 19.80, **0.2 SE from analytic chance**. This is the first benchmark
+here with a falsifiable validity check, and it passes.
+
+**Both channels are load-bearing.** Topology finds the dense region but cannot name it; text
+names all five themes but cannot say which is anomalous. That is exactly the `Read` operation of
+§2.3, and it is what NeighborhoodQA (partly solvable from the centre node's text, 72.65 of 83.87)
+and NLGraph (pure topology, no semantics) each fail to isolate.
+
+**Diagnostics.** α collapses onto **hop 2** (`[0.000, 0.000, 0.999]` in all three rounds) with
+gates at 0.62 / 0.83 / 0.82. On the control arm the gates collapse to 0.05 / 0.10 / 0.11 — the
+model learns to shut a channel carrying nothing, which is an independent sanity signal.
+
+**Two limits, stated plainly.** The structural cue is **degree** (+4.4 edges for dense-community
+nodes), a first-order local quantity one message-passing round computes; this is anchor-free
+localization by a *local* cue, not path-level reasoning — consistent with ReGraph remaining at
+chance on NLGraph. And at `density_ratio = 5.0` the result is **saturated**, so the informative
+quantity is the accuracy-vs-`density_ratio` curve and the threshold where a method falls back to
+chance, not this single point. Full documentation, data and a standalone scorer:
+[benchmarks/structuralanomaly/](benchmarks/structuralanomaly/).
+
 ### Backbone sensitivity: Llama-3.1-8B-Instruct vs Llama-3.2-3B-Instruct
 
 Same code, same preprocessed data, same hyperparameters — only `llm.name`, `llm.d_llm` (4096 →
@@ -750,6 +794,12 @@ python -m regraph.eval --config configs/<CONFIG>.yaml --ckpt runs/<CKPT>/best.pt
 | NLGraph cycle              | **52.88** | Acc    | `nlgraph_cycle`             | `nlgraph_cycle/seed0`             |
 | NeighborhoodQA             | **83.87** | set-F1 | `arxiv_nbrqa`               | `arxiv_nbrqa/seed0`               |
 | — its no-reader control   | 6.98            | set-F1 | `arxiv_nbrqa`               | `arxiv_nbrqa/noreader`            |
+| — its 0-hop control        | 72.65           | set-F1 | `arxiv_nbrqa_zerohop`       | `arxiv_nbrqa_zerohop/seed0`       |
+| NeighborhoodQA-2hop        | **56.68** | set-F1 | `arxiv_nbrqa_hop2`          | `arxiv_nbrqa_hop2/seed0`          |
+| — its 1-hop control        | 48.66           | set-F1 | `arxiv_nbrqa_hop2_1hop`     | `arxiv_nbrqa_hop2_1hop/seed0`     |
+| StructuralAnomaly          | **99.05** | Acc    | `synth_anomaly`             | `synth_anomaly/seed0`             |
+| — its unanswerable control | 19.80           | Acc    | `synth_anomaly_control`     | `synth_anomaly_control/seed0`     |
+| SceneGraphs + token channel | **89.41** | Acc    | `scene_graphs_dual`         | `scene_graphs/dual-full`          |
 | NLGraph conn. + token ch.  | 87.87 / 75.74   | Acc    | `nlgraph_connectivity_dual` | `.../dual-A`, `.../dual-B`      |
 | NLGraph cycle + token ch.  | 75.92 / 90.58   | Acc    | `nlgraph_cycle_dual`        | `.../dual-A`, `.../dual-B`      |
 | ExplaGraphs + token ch.    | 86.82 / 81.05   | Acc    | `expla_graphs_dual`         | `expla_graphs/dual-A`, `dual-B` |
