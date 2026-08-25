@@ -2,15 +2,23 @@
 # =============================================================================
 #  SceneGraphs -- 89.41 (8B, + token channel)
 #
-#  Best non-GRAFF result: clears G-Retriever w/ LoRA (86.83) by +2.58 (11.9 SE)
-#  with the LLM frozen against their tuned one. GRAFF (90.2) is still 0.79 ahead.
+#  READ THIS BEFORE QUOTING THE NUMBER -- SceneGraphs is NOT a matched-backbone
+#  SOTA result, despite appearing in the six-dataset list.
 #
-#  TWO THINGS TO KNOW. (1) This configuration SERIALIZES THE GRAPH INTO THE
-#  PROMPT and therefore violates ReGraph.md section 3.2 -- it is the augmented
-#  setup, not ReGraph as specified, whose SceneGraphs score is 51.83 (8B) /
-#  53.24 (3B). (2) 89.41 is an 8B number; the matched-backbone 3B run is still
-#  training at the time of writing, so this script defaults to 8B and falls
-#  back with a message if the 3B checkpoint is absent.
+#  At 8B this configuration scores 89.41, ahead of every non-GRAFF baseline.
+#  But GRAFF's table is Llama-3.2-3B throughout, and the matched 3B run scores
+#  83.54: ahead of G-Retriever (82.3) but 1.76 BEHIND LoRA (85.3) at 6.7 SE,
+#  i.e. 3rd of 7 rather than 1st of 8. The 8B advantage comes from doubling the
+#  backbone, not from the method.
+#
+#  It also SERIALIZES THE GRAPH INTO THE PROMPT, violating ReGraph.md section
+#  3.2 -- the augmented setup, not ReGraph as specified, whose SceneGraphs
+#  score is 51.83 (8B) / 53.24 (3B).
+#
+#  The 8B->3B drop (-5.87) is the most useful thing this run produced: the same
+#  dataset is backbone-INsensitive without the token channel (+1.41) and
+#  strongly sensitive with it, so serializing the graph moves the work into the
+#  language model. Both arms are evaluated below.
 #
 #  DEFAULT ACTION: evaluate the released checkpoint (minutes, no training).
 #  TO RETRAIN:     comment out STEP 2, uncomment STEP 3.
@@ -48,13 +56,13 @@ fi
 
 if [ ! -f "$CKPT/best.pt" ]; then
   echo "[error] $CKPT/best.pt not found."
-  echo "        The 3B run (dual-3b) takes ~19 h; use CKPT=runs/scene_graphs/dual-full for 8B."
+  echo "        8B: runs/scene_graphs/dual-full   3B: runs/scene_graphs/dual-3b"
   exit 1
 fi
 
 # --- STEP 2 (default): evaluate the released checkpoint ---------------------
 python -m regraph.eval --config "$CONFIG" --ckpt "$CKPT/best.pt" --split test "${BACKBONE[@]}"
-echo "expected: 89.41 (8B, dual-full) on all 20,025 test examples"
+echo "expected: 89.41 (8B, dual-full) / 83.54 (3B, dual-3b), all 20,025 test examples"
 
 # --- STEP 3: retrain from scratch (~45 h at 8B, ~19 h at 3B) ----------------
 # python -m regraph.train --config "$CONFIG" run_name=mydual \

@@ -71,7 +71,7 @@ opposite directions. Read it together with §3.6 before quoting any of these.
 | **ogbn-arxiv** | **72.28** | 71.75 | GraphTranslator 28.48 (ChatGLM2-**6B**) | A + B | **SOTA at either size**, +43.80 |
 | **Cora** | **88.99 ±1.26** (3 seeds) | 87.64 ±0.92 | LLaGA-HO-7B 89.22 (Vicuna-**7B**) | A | **SOTA at 3B** (tie at half the backbone); 8B is 1.7 SE behind |
 | ExplaGraphs | 90.43 | 92.42 | GRAFF 92.5 (**3B**) | — | behind at parity. Excluding GRAFF (§3.5): **8B wins (+3.52, 3.13 SE)**, 3B only +1.53 (1.22 SE, n.s.) |
-| SceneGraphs | 53.24 | 51.83 · **89.41** *w/ token channel* | GRAFF 90.2 (3B); G-Ret. w/ LoRA 86.83 | — | as specified, far behind. **+ token channel at 8B: 1st of 8 non-GRAFF (+2.58, 11.9 SE)**, 0.79 behind GRAFF — §4.1 |
+| SceneGraphs | 53.24 · *83.54 w/ token channel* | 51.83 · 89.41 *w/ token channel* | GRAFF 90.2 (3B); LoRA 85.3 (3B) | — | far behind as specified. With the token channel: 1st of 8 non-GRAFF **at 8B only** — at matched 3B it is **−1.76 behind LoRA (6.7 SE)**. Not a matched-backbone claim — §4.1 |
 | NLGraph connectivity | 54.80 | 52.58 · 88.79 *w/ token channel* | CoT+SC 86.82 (davinci-003) | B | **not SOTA at 3B** (at chance). 8B+token arguable only — §3.3 |
 | NeighborhoodQA | 83.83 | 83.87 | none | — | no competitor |
 | ogbn-products | 74.27 | 74.21 | none | — | no competitor |
@@ -176,11 +176,12 @@ under Rule A. The 8B win is significant at 3.13 SE; the matched-3B win over LoRA
 **WebQSP is unaffected**, because GRAFF was never what blocked it: the binding constraint is
 G-Retriever w/ LoRA, and ReGraph as specified is 11.6 points behind it.
 
-**SceneGraphs changed after this section was first written.** ReGraph as specified is still 35.0
-behind, but the token-channel configuration, trained to convergence, reaches **89.41** on the full
-test set — clearing G-Retriever w/ LoRA (86.83) by **+2.58 (11.9 SE)** and leaving only GRAFF
-(90.2) ahead by 0.79 (3.6 SE). Excluding GRAFF therefore now flips SceneGraphs as well, subject to
-the §3.2 violation carried by the token channel. See §4.1.
+**SceneGraphs was briefly thought to flip, and does not.** ReGraph as specified is 35.0 behind.
+The token-channel configuration reaches 89.41 at 8B, which clears every non-GRAFF baseline — but
+the matched-backbone run settles the question the other way: at Llama-3.2-3B, the backbone GRAFF's
+whole table uses, it scores **83.54**, which is **−1.76 behind LoRA (85.3) at 6.7 SE**. The 8B
+figure was beating 3B competitors with a model twice their size. Excluding GRAFF therefore flips
+**one** dataset, not two. See §4.1.
 
 #### Two conditions on using this variant
 
@@ -210,13 +211,26 @@ quantifies over**. The two honest options give different lists.
 
 > **ogbn-arxiv (3B), Cora (3B), ExplaGraphs (8B, GRAFF excluded).** Three datasets.
 
-Three list items that do **not** survive either policy, and why:
+Four list items that do **not** survive either policy, and why:
 
+- **SceneGraphs + token channel — remove it.** 89.41 leads every non-GRAFF baseline, but it is an
+  8B number and the baselines it beats are 3B. The matched run scores **83.54**, which is 1.76
+  *behind* LoRA (85.3) at 6.7 SE, so it is 3rd of 7 at parity rather than 1st of 8 (§4.1). Under
+  Policy 1 it fails outright; under Policy 2 it would have to be listed as a win whose entire
+  margin comes from doubling the backbone, which is precisely what Policy 2 exists to make
+  visible. It also violates §3.2. Its real value is diagnostic, not competitive — see the
+  backbone contrast below.
 - **NLGraph connectivity — remove it.** The 88.79 figure is **8B with the token channel**; no 3B
   dual-channel run exists (`runs/nlgraph_connectivity_dual/dual-A/resolved_config.yaml` resolves to
   `meta-llama/Llama-3.1-8B-Instruct`). At 3B, ReGraph scores 60.71 / 56.63 / 47.06 → **54.80**,
   which is at chance and 32 points behind CoT+SC. Even the 8B number is disqualified three ways in
   §3.3.
+- **The two token-channel entries fail for the same reason**, and their failure is informative.
+  SceneGraphs is backbone-insensitive as specified (51.83 → 53.24, **+1.41**) and strongly
+  backbone-sensitive once the graph is serialized (89.41 → 83.54, **−5.87**). Putting the graph in
+  the prompt moves the work into the language model, so LLM capacity starts paying for the score.
+  Any claim resting on a token-channel run is therefore a claim about the backbone as much as
+  about the method.
 - **ExplaGraphs is weakest exactly at 3B**, the opposite of Cora. GRAFF's main table is already 3B,
   so there is no backbone advantage to claim; the significant margin (+3.52, 3.13 SE) exists only
   at 8B. Quoting "+3.52" alongside a 3B claim mixes the two.
@@ -251,7 +265,8 @@ Best non-GRAFF value per column in **bold**.
 | *(GRAFF — excluded)* | *frozen* | *text+vector* | *92.5* | *90.2* | *72.2* |
 | **ReGraph (ours), 3B** | frozen | **vector only** | **90.43** | 53.24 | 51.17 |
 | *ReGraph (ours), 8B* | frozen | *vector only* | *92.42* | *51.83* | *62.22* |
-| **ReGraph + token channel, 8B**$^{\S}$ | frozen | text+vector | 86.82 | **89.41** | n/a |
+| **ReGraph + token channel, 8B**$^{\S}$ | frozen | text+vector | 86.82 | 89.41 | n/a |
+| *ReGraph + token channel, 3B*$^{\S}$ | frozen | text+vector | — | *83.54* | n/a |
 
 $^{\S}$ Violates `ReGraph.md` §3.2 (graph serialized into the prompt) — the augmented
 configuration, not ReGraph as specified. WebQSP admits no token channel: serializing it costs
@@ -265,7 +280,7 @@ Placement of the matched-backbone 3B row against the eight remaining baselines:
 | --- | --- | --- | --- | --- | --- |
 | **ExplaGraphs** | 90.43 | 88.9 (LoRA / GRAG) | **+1.53** (1.22 SE) | **1st of 8** | 1st of 8 (+3.52, 3.13 SE) |
 | SceneGraphs *(as specified)* | 53.24 | 85.3 (LoRA) | −32.06 | 4th of 7 | 4th of 7 |
-| **SceneGraphs *(+ token channel)*** | — | 86.83 (G-Ret. w/ LoRA) | **+2.58** (11.9 SE) | — | **1st of 8** |
+| **SceneGraphs *(+ token channel)*** | **83.54** | 85.3 (LoRA, 3B) | **−1.76** (6.7 SE) | **3rd of 7** | 1st of 8 (8B only) |
 | WebQSP | 51.17 | 71.1 (LoRA) | −19.93 | **8th of 9** | 5th of 9 |
 
 ### 4.1 What the table shows
@@ -282,16 +297,20 @@ G-Retriever (82.3) and Prompt tuning (58.3), clearing only the two zero-shot row
 beaten by **prompt tuning, which sees no graph at all**, is the sharpest available statement of the
 attribute-binding failure analysed in README §"Why the results split the way they do".
 
-*With the token channel, the same dataset inverts.* Trained to convergence
-(`runs/scene_graphs/dual-full`, 6 epochs, full 20,025-example test set) ReGraph reaches **89.41**,
-which is **1st among the eight non-GRAFF baselines** — ahead of G-Retriever w/ LoRA by +2.58
-(11.9 SE) and of LoRA by +4.11, while keeping the LLM **frozen** against their tuned one. GRAFF
-stays 0.79 ahead (3.6 SE). This configuration serializes the graph and so violates
-`ReGraph.md` §3.2; unlike the NLGraph case in §3.3, however, the comparison itself is fair — the
-baselines it beats also put the graph in the prompt and also train — so the disqualification is
-about *which method this is*, not about whether the comparison is sound. The remaining asymmetries
-are the truncated full graph (1,536 tokens) versus their 8.21-node PCST subgraph, and an 8B
-backbone against 7B/3B.
+*With the token channel the dataset partly recovers, but not enough at matched backbone.* Trained
+to convergence at 8B (`runs/scene_graphs/dual-full`) ReGraph reaches 89.41, 1st among the eight
+non-GRAFF baselines. Repeating the identical pipeline at **Llama-3.2-3B** — the backbone every row
+of this table uses — gives **83.54** (`runs/scene_graphs/dual-3b`): ahead of G-Retriever (82.3,
++1.24) but **behind LoRA (85.3) by 1.76 at 6.7 SE**, and 6.66 behind GRAFF. **3rd of 7.**
+
+So the 8B result was beating 3B competitors with a model twice their size, and the advantage does
+not survive matching: the 8B→3B drop is **−5.87 (17 SE)**. Two consequences. First, SceneGraphs
+does not enter the SOTA list under any consistent backbone policy (§3.6). Second — and more
+useful than the failed claim — the drop is itself a measurement: **the same dataset is
+backbone-insensitive without the token channel (51.83 → 53.24, +1.41) and strongly
+backbone-sensitive with it (−5.87)**. Serializing the graph moves the work out of the graph
+interface and into the language model, which is the quantitative content of the §3.2 violation
+rather than merely a procedural objection. README's backbone-sensitivity section develops this.
 
 **WebQSP — 8th of 9 at 3B, the single worst placement in this document.** ReGraph 3B (51.17) is
 beaten by **zero-shot chat (53.4)**, i.e. by the backbone with no graph and no training. Only
@@ -316,17 +335,17 @@ against ≤2 points on seven other datasets).
 
 ### 4.3 Net effect
 
-Removing GRAFF converts **two** results from a loss into a win: **ExplaGraphs** for ReGraph as
-specified, and **SceneGraphs** for the token-channel configuration (89.41 vs G-Retriever w/ LoRA's
-86.83). It does not rescue **WebQSP**, where the binding constraint is LoRA — a baseline that
-predates GRAFF and appears in every version of this table — and where no token-channel run is
-possible at all (§4.2 and README footnote ‡: serializing WebQSP costs 62,703 tokens on average).
+Removing GRAFF converts **one** result from a loss into a win: **ExplaGraphs**, for ReGraph as
+specified. It does not rescue **SceneGraphs** — the token-channel configuration leads at 8B but
+falls 1.76 behind LoRA at matched 3B (§4.1) — nor **WebQSP**, where the binding constraint is LoRA
+and no token-channel run is possible at all (§4.2 and README footnote ‡: serializing WebQSP costs
+62,703 tokens on average). In both cases the constraint is LoRA, a baseline that predates GRAFF
+and appears in every version of this table.
 
-Note the asymmetry between the two wins. ExplaGraphs is won by ReGraph *as specified*, but on a
-dataset where the graph contributes almost nothing. SceneGraphs is won on a dataset where the graph
-is decisive, but only by a configuration that **violates §3.2**. Neither is a clean demonstration
-that iterative graph reading beats prior work; the closest thing to that remains the matched A/B
-in §7, claim 2.
+Note what the one surviving win rests on. ExplaGraphs is won by ReGraph *as specified*, but on a
+dataset where the graph contributes almost nothing (its evidence vector is ~98% example-invariant),
+and the margin is significant only at 8B. It is not a demonstration that iterative graph reading
+beats prior work; the closest thing to that remains the matched A/B in §7, claim 3.
 
 ---
 
@@ -412,11 +431,13 @@ Standard errors are binomial (`sqrt(p(1−p)/n)`) unless a multi-seed SEM is quo
 follow the authors' **unweighted mean of the three difficulty subsets**; size-weighted overall
 accuracies are 49.33 (connectivity) and 52.88 (cycle).
 
-**Completed 2026-08-24:** the full-scale SceneGraphs token-channel run
-(`runs/scene_graphs/dual-full`) finished at **89.41** on all 20,025 test examples (6 epochs, best
-validation loss 0.2239 at epoch 3), superseding the 81.93 obtained at 3,000 steps on a
-1,500-example subset. It **did** change a verdict: SceneGraphs now leads every non-GRAFF baseline
-(§3.5, §4.1, §4.3). Its α is also *not* collapsed — see README Table 7, where the earlier claim
+**Completed 2026-08-24/25:** the SceneGraphs token-channel runs finished at both backbones —
+**89.41** at 8B (`runs/scene_graphs/dual-full`, best validation loss 0.2239 at epoch 3) and
+**83.54** at matched 3B (`runs/scene_graphs/dual-3b`, 0.2741, same epoch), both on all 20,025 test
+examples, superseding the 81.93 obtained at 3,000 steps on a 1,500-example subset. Together they
+**reversed** an intermediate verdict recorded here: on the 8B number alone SceneGraphs appeared to
+lead every non-GRAFF baseline, but at matched backbone it is 1.76 behind LoRA, so excluding GRAFF
+flips one dataset rather than two (§3.5, §4.1, §4.3, §3.6). Its α is also *not* collapsed — see README Table 7, where the earlier claim
 that §2.3's diffusion can be removed on every dataset is withdrawn and narrowed to the
 vector-only setting.
 

@@ -87,7 +87,8 @@ protocol-comparable to the block it sits in; see the notes under each table.
 | 13 | GRAFF ᵇ                                    | Llama-3.2-3B      | frozen | text+vector           | **92.5**  | **90.2**  | **72.2** |
 |    | *This work*                               |                   |        |                       |                 |                 |                |
 | 14 | **ReGraph (ours)**                    | Llama-3.1-8B-Inst | frozen | **vector only** | **92.42** | 51.83           | 62.22          |
-| 15 | **ReGraph + token channel (ours)** † | Llama-3.1-8B-Inst | frozen | text+vector           | 86.82           | **89.41** | n/a ‡         |
+| 15 | **ReGraph + token channel (ours)** † | Llama-3.1-8B-Inst | frozen | text+vector           | 86.82           | **89.41** ˣ | n/a ‡         |
+| 15b| *same, matched 3B backbone (ours)* †  | Llama-3.2-3B      | frozen | text+vector           | —              | *83.54* ˣ | n/a ‡         |
 | 16 | *token channel only, no reader (ours)*    | Llama-3.1-8B-Inst | frozen | text                  | 81.05           | 74.93 †        | n/a ‡         |
 
 ᵃ He et al., NeurIPS 2024 (arXiv:2402.07630) Table 3. ᵇ Chaudhary et al., Findings of EACL 2026,
@@ -105,6 +106,13 @@ full below; a full-scale no-reader control has not been run.
 
 Rows 15-16 **violate `ReGraph.md` §3.2** by serializing the graph into the prompt — the
 "augmentation" configuration, not ReGraph as specified.
+
+ˣ **The SceneGraphs token-channel advantage does not survive backbone matching.** GRAFF's table is
+Llama-3.2-3B throughout, and at that size ReGraph scores 83.54: still ahead of G-Retriever (82.3,
++1.24) but **behind LoRA (85.3, −1.76 at 6.7 SE)** and far behind GRAFF (90.2). Row 15's 89.41 is
+an 8B number beating 3B baselines, so it is not a matched-backbone claim. The 8B→3B drop is
+**−5.87 (17 SE)** — see the backbone-sensitivity section, where it turns out to be the most
+informative thing this run produced.
 
 ‡ WebQSP cannot take a token channel: serializing its full graph costs **62,703 tokens on
 average** (max 110,458), against Llama-3.1's 128k limit and far past where memory and speed hold
@@ -413,10 +421,12 @@ Llama-3.1-8B-Instruct. Trainable parameters: 32.70M → 30.56M.
 | NLGraph connectivity | 49.33        | 54.18 | +4.85  |
 | NLGraph cycle        | 52.88        | 47.12 | -5.76  |
 | NeighborhoodQA       | 83.87        | 83.83 | -0.05  |
+| SceneGraphs + token channel | 89.41 | 83.54 | **-5.87** |
 | StructuralAnomaly    | 99.05        | 99.15 | +0.10  |
 | — its control arm   | 19.87        | 20.26 | +0.39 ᵃ |
 
-**Backbone size barely matters — except where the answer is an entity name.** Eight datasets move
+**Backbone size barely matters — except where the answer is an entity name, or where the
+graph is serialized into the prompt.** Eight datasets move
 by under 2 points, two of them *upward* with the smaller model, and both NLGraph tasks stay at
 chance regardless. WebQSP is the outlier at −11.1 (6.3 SE).
 
@@ -426,6 +436,23 @@ nothing. Every dataset where ReGraph's score reflects graph reading behaves that
 does not — and it is precisely the dataset where the reader was measured not to localize the
 answer (gold entity at median rank 301/1371), implying its score came from the backbone's
 parametric knowledge of famous entities. Halving the backbone removes 11 points of exactly that.
+
+**The token channel converts a graph-interface problem into a language-model problem.** This is
+the sharpest result in the table, and it is visible only because the same dataset appears twice:
+
+| SceneGraphs configuration | 8B | 3B | Δ |
+| --- | --- | --- | --- |
+| vector channel only (ReGraph as specified) | 51.83 | 53.24 | **+1.41** |
+| + token channel (graph serialized into the prompt) | 89.41 | 83.54 | **−5.87** |
+
+Identical data, identical reader, identical training recipe; the only difference is whether the
+graph is also written into the prompt. Without it the task is backbone-insensitive, the signature
+of a system limited by what the graph→LLM interface can carry. With it the task becomes strongly
+backbone-sensitive, the signature of a system limited by the language model — the same signature
+as WebQSP. Serializing the graph does not make the *reading* better; it moves the work into the
+LLM, where model capacity is what pays for it. That is the quantitative form of the objection
+that rows 15-16 violate §3.2: the violation is not merely procedural, it changes what the
+measurement is measuring.
 
 **NeighborhoodQA passes the same test** (83.87 → 83.83): the benchmark constructed here measures
 the graph interface rather than language-model capacity, which is what a graph-reasoning
@@ -459,7 +486,8 @@ One mechanism orders all five: the vector channel relays **semantics already pre
 features**, but cannot **bind attributes to objects** or **compute relations**. Adding a token
 channel supplies exactly those two capabilities, which is why row 15 jumps SceneGraphs from
 51.83 to **89.41** — and at matched budget the reading rounds still contribute +7.00 pp on top of
-serialization.
+serialization. But the jump is not free of the backbone: at matched 3B the same configuration
+gives 83.54, so a third of the gain over LoRA disappears with the larger model (footnote ˣ).
 
 ### Benchmark 1 — GraphQA (G-Retriever, NeurIPS 2024)
 
@@ -652,13 +680,19 @@ the project, and it contradicts the prediction made before the run — which is 
 `num_rounds=0` control was run at all.
 
 **Trained to convergence, the both-channels arm reaches 89.41** on the full 20,025-example test set
-(6 epochs, best validation loss 0.2239 at epoch 3; `runs/scene_graphs/dual-full`). That clears
-G-Retriever's frozen 81.31 by 8.10 pp, **G-Retriever w/ LoRA's 86.83 by 2.58 pp (11.9 SE)** and
-LoRA-3B's 85.3 by 4.11 — while keeping the LLM frozen, against a LoRA-tuned competitor. GRAFF
-(90.2) remains 0.79 ahead (3.6 SE). Two asymmetries to keep in view: the full graph is serialized
-(truncated to 1,536 tokens) rather than a PCST subgraph, and the backbone is 8B against their
-7B/3B. The no-reader control has not been rerun at this budget, so the +7.00 pp reader
-contribution above is still the 3,000-step measurement, not a measurement at 89.41.
+(6 epochs, best validation loss 0.2239 at epoch 3; `runs/scene_graphs/dual-full`). At 8B that
+clears G-Retriever's frozen 81.31 by 8.10 pp, G-Retriever w/ LoRA's 86.83 by 2.58 pp and LoRA-3B's
+85.3 by 4.11, with GRAFF (90.2) 0.79 ahead.
+
+**The matched-backbone run then removes most of that.** Repeating the identical pipeline on
+Llama-3.2-3B — the backbone every row of GRAFF's table uses — gives **83.54** (6 epochs, best
+validation loss 0.2741 at the same epoch 3; `runs/scene_graphs/dual-3b`). Against the 3B
+baselines that is +1.24 over G-Retriever (82.3) but **−1.76 against LoRA (85.3), significant at
+6.7 SE**. So the token-channel configuration is *not* the best non-GRAFF result at matched
+backbone; the 8B figure was beating 3B competitors with a model twice their size.
+
+The no-reader control has not been rerun at this budget either, so the +7.00 pp reader
+contribution above remains the 3,000-step measurement, not a measurement at 89.41.
 
 **This changes what ReGraph is being claimed to be.** `ReGraph.md` §3.2 keeps the graph out of
 the context, and that premise is the paper's stated advantage over GraphRAG. A model with a
@@ -767,8 +801,9 @@ residual), not a better configuration of this one.
 
 **Follow-up that resolves this.** The limitation above is about the *vector* channel, and it is
 removed by adding a token channel rather than by improving the vector one — see "The one
-intervention that worked" above: 34.93 → 81.93 at matched budget on SceneGraphs (89.41 trained to
-convergence), of which +7.00 pp is attributable to the reading rounds themselves.
+intervention that worked" above: 34.93 → 81.93 at matched budget on SceneGraphs (89.41 at 8B and
+83.54 at matched 3B when trained to convergence), of which +7.00 pp is attributable to the reading
+rounds themselves.
 
 **Diagnostic caveat:** fusion-gate means are *not* a health signal on their own, contrary to
 `docs/components/05-fuse.md` §5.1. The aligned arXiv model runs gates at 0.06 with ‖R‖ = 654,
@@ -818,6 +853,7 @@ python -m regraph.eval --config configs/<CONFIG>.yaml --ckpt runs/<CKPT>/best.pt
 | StructuralAnomaly, 3B      | **99.15** | Acc    | `synth_anomaly` ᵍ           | `synth_anomaly/llama3b`           |
 | — its control, 3B          | ~20.3           | Acc    | `synth_anomaly_control` ᵍ   | `synth_anomaly_control/llama3b`   |
 | SceneGraphs + token channel | **89.41** | Acc    | `scene_graphs_dual`         | `scene_graphs/dual-full`          |
+| — same, matched 3B         | 83.54           | Acc    | `scene_graphs_dual` ᵍ       | `scene_graphs/dual-3b`            |
 | NLGraph conn. + token ch.  | 87.87 / 75.74   | Acc    | `nlgraph_connectivity_dual` | `.../dual-A`, `.../dual-B`      |
 | NLGraph cycle + token ch.  | 75.92 / 90.58   | Acc    | `nlgraph_cycle_dual`        | `.../dual-A`, `.../dual-B`      |
 | ExplaGraphs + token ch.    | 86.82 / 81.05   | Acc    | `expla_graphs_dual`         | `expla_graphs/dual-A`, `dual-B` |
