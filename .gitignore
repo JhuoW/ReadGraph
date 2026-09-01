@@ -2,9 +2,10 @@ __pycache__/
 *.egg-info/
 .cache/
 runs/
+# component contracts + protocol: kept local, not published
+docs/
 data/raw/
 .pytest_cache/
 .claude/
 .vscode/
 paper/
-docs/
