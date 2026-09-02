@@ -10,7 +10,7 @@
 #  matched backbone ReGraph is 90.43 against LoRA/GRAG's 88.9: +1.53 at only
 #  1.22 SE, NOT significant. The significant margin (+3.52, 3.13 SE) exists only
 #  at 8B, i.e. with a LARGER backbone than the baselines it beats. Set
-#  BACKBONE=() below for that number, and print the backbone alongside it.
+#  the 8B BACKBONE line below for that number, and print the backbone with it.
 #
 #  DEFAULT ACTION: evaluate the released checkpoint (minutes, no training).
 #  TO RETRAIN:     comment out STEP 2, uncomment STEP 3.
@@ -19,14 +19,12 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 source scripts/env.sh
 
-# Backbone. Default is Llama-3.2-3B-Instruct. There is no separate 3B config in
-# this repo -- every 3B number is the base config plus exactly these three
-# overrides. For the 8B backbone, set BACKBONE=() instead.
-BACKBONE=(
-  llm.name=meta-llama/Llama-3.2-3B-Instruct
-  llm.d_llm=3072
-  llm.num_layers=28
-)
+# Backbone. Llama-3.2-3B-Instruct is now the repo-wide default (configs/default.yaml),
+# so no override is needed for it and BACKBONE=() below means 3B, not 8B.
+# For the 8B backbone, uncomment BACKBONE_8B and use it instead -- the three
+# fields move together, and an 8B checkpoint will not load under a 3B config.
+BACKBONE=()
+# BACKBONE=(llm.name=meta-llama/Llama-3.1-8B-Instruct llm.d_llm=4096 llm.num_layers=32)
 
 CONFIG=configs/expla_graphs.yaml
 CKPT=runs/expla_graphs/llama3b          # 3B; the 8B run is runs/expla_graphs/fix-seed0
@@ -42,7 +40,8 @@ fi
 
 # --- STEP 2 (default): evaluate the released checkpoint ---------------------
 python -m regraph.eval --config "$CONFIG" --ckpt "$CKPT/best.pt" --split test "${BACKBONE[@]}"
-echo "expected: 90.43 (3B).  With BACKBONE=() and runs/expla_graphs/fix-seed0: 92.42 (8B)"
+echo "expected: 90.43 (3B, the default).  For 92.42 (8B): uncomment the BACKBONE 8B"
+echo "line above AND use --ckpt runs/expla_graphs/fix-seed0/best.pt"
 
 # --- STEP 3: retrain from scratch -------------------------------------------
 # python -m regraph.train --config "$CONFIG" run_name=my3b "${BACKBONE[@]}"

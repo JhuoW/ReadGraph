@@ -5,13 +5,18 @@ seed: 0
 run_dir: runs/${dataset.name}/${run_name}
 run_name: default
 
+# Default backbone is Llama-3.2-3B-Instruct. Most results in README.md were produced on
+# Llama-3.1-8B-Instruct, which was the default until 2026-09-02; to reproduce those, append
+#   llm.name=meta-llama/Llama-3.1-8B-Instruct llm.d_llm=4096 llm.num_layers=32
+# to the command. The three fields move together -- a checkpoint trained at one size will not
+# load at the other (b_base and W_O are d_llm-shaped), so a mismatch fails loudly.
 llm:
-  name: meta-llama/Llama-3.1-8B-Instruct  # ReGraph.md 3.2 / OPEN-QUESTIONS Q1; plain-text prompt, no chat template
+  name: meta-llama/Llama-3.2-3B-Instruct  # ReGraph.md 3.2 / OPEN-QUESTIONS Q1; plain-text prompt, no chat template
   dtype: bfloat16
   freeze: true
   gradient_checkpointing: true
-  d_llm: 4096
-  num_layers: 32
+  d_llm: 3072
+  num_layers: 28
 
 model:
   num_query_tokens: 8               # N_B

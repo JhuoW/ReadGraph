@@ -13,14 +13,12 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 source scripts/env.sh
 
-# Backbone. Default is Llama-3.2-3B-Instruct. There is no separate 3B config in
-# this repo -- every 3B number is the base config plus exactly these three
-# overrides. For the 8B backbone, set BACKBONE=() instead.
-BACKBONE=(
-  llm.name=meta-llama/Llama-3.2-3B-Instruct
-  llm.d_llm=3072
-  llm.num_layers=28
-)
+# Backbone. Llama-3.2-3B-Instruct is now the repo-wide default (configs/default.yaml),
+# so no override is needed for it and BACKBONE=() below means 3B, not 8B.
+# For the 8B backbone, uncomment BACKBONE_8B and use it instead -- the three
+# fields move together, and an 8B checkpoint will not load under a 3B config.
+BACKBONE=()
+# BACKBONE=(llm.name=meta-llama/Llama-3.1-8B-Instruct llm.d_llm=4096 llm.num_layers=32)
 
 CONFIG=configs/cora.yaml
 SEEDS=(llama3b llama3b-s1 llama3b-s2)

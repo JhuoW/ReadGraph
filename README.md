@@ -53,7 +53,15 @@ every deviation from the spec: [docs/OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md).
 Which of these results constitute state of the art, and under which admission criteria:
 [EVAL.md](EVAL.md).
 
-ReGraph configuration throughout: Llama-3.1-8B-Instruct with **all LLM parameters frozen**,
+**Backbone note (changed 2026-09-02).** The repo-wide default in `configs/default.yaml` is now
+**Llama-3.2-3B-Instruct**. Most numbers in the tables below were produced on
+Llama-3.1-8B-Instruct, which was the default until that date; each table states which backbone a
+row used. To reproduce an 8B row, append
+`llm.name=meta-llama/Llama-3.1-8B-Instruct llm.d_llm=4096 llm.num_layers=32` to the command —
+the three fields move together, and an 8B checkpoint will not load under a 3B config, so a
+mismatch fails loudly rather than silently.
+
+ReGraph configuration throughout: **all LLM parameters frozen**,
 8 graph-query tokens, 3 reading rounds, diffusion depth K=2, ~32.7M trainable parameters, and
 **the graph is never serialized into the prompt**.
 
@@ -406,10 +414,10 @@ chance, not this single point. Full documentation, data and a standalone scorer:
 ### Backbone sensitivity: Llama-3.1-8B-Instruct vs Llama-3.2-3B-Instruct
 
 Same code, same preprocessed data, same hyperparameters — only `llm.name`, `llm.d_llm` (4096 →
-3072) and `llm.num_layers` (32 → 28) change. The default everywhere else in this README remains
-Llama-3.1-8B-Instruct. Trainable parameters: 32.70M → 30.56M.
+3072) and `llm.num_layers` (32 → 28) change. 3B is now the config default; the 8B column is the
+one that needs overrides. Trainable parameters: 32.70M → 30.56M.
 
-| Dataset              | 8B (default) | 3B    | Δ     |
+| Dataset              | 8B           | 3B (default) | Δ     |
 | -------------------- | ------------ | ----- | ------ |
 | ExplaGraphs          | 92.42        | 90.43 | -1.99  |
 | SceneGraphs          | 51.83        | 53.24 | +1.41  |
@@ -860,11 +868,11 @@ python -m regraph.eval --config configs/<CONFIG>.yaml --ckpt runs/<CKPT>/best.pt
 | SceneGraphs + coordinates  | 51.50           | Acc    | `scene_graphs_coords`       | `scene_graphs_sbert_coords/full`  |
 | arXiv + alignment pretrain | 71.45           | Top-1  | `arxiv`                     | `arxiv/aligned`                   |
 
-ᵍ Rows marked ᵍ are 3B runs: append the backbone overrides to the command, exactly as they were
-trained —
-`llm.name=meta-llama/Llama-3.2-3B-Instruct llm.d_llm=3072 llm.num_layers=28`.
-There is no separate 3B config; every 3B result in this repo is the base config plus these three
-overrides.
+ᵍ **Inverted on 2026-09-02, when 3B became the config default.** Rows marked ᵍ are 3B runs and
+now need *no* overrides. Every **unmarked** row is an 8B run and needs
+`llm.name=meta-llama/Llama-3.1-8B-Instruct llm.d_llm=4096 llm.num_layers=32`
+appended to the command. There is no separate backbone config either way; both sizes are the base
+config plus (or minus) these three fields, and they must be changed together.
 
 arXiv Top-3/Top-5 come from a separate ranking pass:
 

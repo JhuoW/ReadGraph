@@ -67,8 +67,10 @@ curve; the released setting (`density_ratio = 5.0`) is its easy end.
 
 ## Reference results
 
-Llama-3.1-8B-Instruct (default) and Llama-3.2-3B-Instruct, both frozen; 8 graph-query tokens,
-3 reading rounds, ~32.7M trainable parameters — the default ReGraph configuration, unchanged.
+Llama-3.2-3B-Instruct (the config default since 2026-09-02) and Llama-3.1-8B-Instruct, both
+frozen; 8 graph-query tokens, 3 reading rounds, ~32.7M trainable parameters — the default ReGraph
+configuration, unchanged. Reproducing the 8B column needs
+`llm.name=meta-llama/Llama-3.1-8B-Instruct llm.d_llm=4096 llm.num_layers=32`.
 
 | Configuration | Llama-3.1-8B | Llama-3.2-3B | Legality |
 | --- | --- | --- | --- |

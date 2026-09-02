@@ -27,23 +27,21 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 source scripts/env.sh
 
-# Backbone. Default is Llama-3.2-3B-Instruct. There is no separate 3B config in
-# this repo -- every 3B number is the base config plus exactly these three
-# overrides. For the 8B backbone, set BACKBONE=() instead.
-BACKBONE=(
-  llm.name=meta-llama/Llama-3.2-3B-Instruct
-  llm.d_llm=3072
-  llm.num_layers=28
-)
-
-# This dataset's headline number is 8B, so the default here is 8B, not 3B.
+# Backbone. Llama-3.2-3B-Instruct is now the repo-wide default (configs/default.yaml),
+# so no override is needed for it and BACKBONE=() below means 3B, not 8B.
+# For the 8B backbone, uncomment BACKBONE_8B and use it instead -- the three
+# fields move together, and an 8B checkpoint will not load under a 3B config.
 BACKBONE=()
-CONFIG=configs/scene_graphs_dual.yaml
-CKPT=runs/scene_graphs/dual-full
+# BACKBONE=(llm.name=meta-llama/Llama-3.1-8B-Instruct llm.d_llm=4096 llm.num_layers=32)
 
-# To use the matched-backbone 3B run instead, uncomment both lines:
-# BACKBONE=(llm.name=meta-llama/Llama-3.2-3B-Instruct llm.d_llm=3072 llm.num_layers=28)
-# CKPT=runs/scene_graphs/dual-3b
+# This dataset defaults to the MATCHED 3B run, which is the honest comparison
+# (83.54). The 8B run reaches 89.41 but beats 3B baselines with a 2x model; to
+# use it, switch BOTH lines together -- an 8B checkpoint will not load under a
+# 3B config, so a half-switch fails on a shape mismatch rather than silently.
+CONFIG=configs/scene_graphs_dual.yaml
+CKPT=runs/scene_graphs/dual-3b
+# BACKBONE=(llm.name=meta-llama/Llama-3.1-8B-Instruct llm.d_llm=4096 llm.num_layers=32)
+# CKPT=runs/scene_graphs/dual-full
 
 STORE=$(python -c "
 from regraph.utils.config import load_config
@@ -62,7 +60,7 @@ fi
 
 # --- STEP 2 (default): evaluate the released checkpoint ---------------------
 python -m regraph.eval --config "$CONFIG" --ckpt "$CKPT/best.pt" --split test "${BACKBONE[@]}"
-echo "expected: 89.41 (8B, dual-full) / 83.54 (3B, dual-3b), all 20,025 test examples"
+echo "expected: 83.54 (3B, dual-3b, the default here) / 89.41 (8B, dual-full)"
 
 # --- STEP 3: retrain from scratch (~45 h at 8B, ~19 h at 3B) ----------------
 # python -m regraph.train --config "$CONFIG" run_name=mydual \
